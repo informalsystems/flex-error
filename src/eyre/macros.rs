@@ -4,7 +4,7 @@ macro_rules! define_error {
   ( $name:ident; $(
       $suberror:ident
       $( ( $( $arg_name:ident : $arg_type:ty ),* $(,)? ) )?
-      $( [ $($source:tt)* ] )?
+      [ $source:ty ]
       =>
       | $formatter_arg:ident | $formatter:expr
     ),* $(,)?
@@ -12,11 +12,11 @@ macro_rules! define_error {
     paste::paste![
       #[derive(Debug)]
       pub enum [< $name Detail >] {
-          $(
-            $suberror (
-              [< $suberror SubError >]
-            ),
-          )*
+        $(
+          $suberror (
+            [< $suberror SubError >]
+          ),
+        )*
       }
 
       $(
@@ -25,9 +25,7 @@ macro_rules! define_error {
           $(
             $( $arg_name: $arg_type, )*
           )?
-          $(
-            source: $crate::error_source_detail!( $($source)* )
-          )?
+          source: $crate::eyre::AsErrorDetail<$source>
         }
 
         impl core::fmt::Display for [< $suberror SubError >] {
@@ -45,8 +43,7 @@ macro_rules! define_error {
           match self {
             $(
               Self::$suberror( suberror ) => {
-                write!( f, "{}",  suberror );
-                Ok(())
+                write!( f, "{}",  suberror )
               }
             ),*
           }
@@ -58,27 +55,10 @@ macro_rules! define_error {
           $name;
           $suberror;
           ( $( $( $arg_name : $arg_type ),* )? )
-          $( [ $($source)* ] )?
+          [ $source ]
         }
       )*
     ];
-  };
-}
-
-#[macro_export]
-macro_rules! error_source_var {
-  ( report[$source:ty] ) => { source };
-  ( basic[$source:ty] ) => { source };
-  () => {}
-}
-
-#[macro_export]
-macro_rules! error_source_detail {
-  ( report[$source:ty] ) => {
-    $crate::eyre::ReportDetail($source)
-  };
-  ( basic[$source:ty] ) => {
-    $source
   };
 }
 
@@ -87,59 +67,30 @@ macro_rules! define_error_constructor {
   ( $name:ident;
     $suberror:ident;
     ( $( $arg_name:ident: $arg_type:ty ),* )
-    [ report[$source:ty] ]
-  ) => {
-    paste::paste! [
-      pub fn [< $kind:lower_error >](
-        $( $arg_name: $arg_type ),*
-        source: $source
-      ) -> $name
-      {
-        use $crate::eyre::Report;
-
-        let Report {
-          source: source_detail,
-          report: source_report,
-        } = source;
-
-        let detail = [< $name Detail >]::$suberror(
-          $( $arg_name ),*
-          source_detail,
-        );
-
-        let message = format!("{}", detail);
-        let report = source_report.wrap_err(message);
-
-        Report {
-          detail,
-          report,
-        }
-      }
-    ]
-  };
-
-  ( $name:ident;
-    $suberror:ident;
-    ( $( $arg_name:ident: $arg_type:ty ),* )
-    [ basic[$source:ty] ]
+    [ $source:ty ]
   ) => {
     paste::paste! [
       pub fn [< $suberror:lower _error >](
-        $( $arg_name: $arg_type ),*,
-        source: $source
+        $( $arg_name: $arg_type, )*
+        source: $crate::eyre::AsErrorSource< $source >
       ) -> $name
       {
-        use $crate::eyre::{Report, EyreReport};
+        use $crate::eyre::{Report, EyreReport, error_details};
+
+        let (source_detail, m_source_report) = error_details::< $source >(source);
 
         let suberror = [< $suberror SubError >] {
-          $( $arg_name ),*,
-          source,
+          $( $arg_name, )*
+          source: source_detail,
         };
 
         let detail = [< $name Detail >]::$suberror(suberror);
 
         let message = format!("{}", detail);
-        let report = EyreReport::msg(message);
+        let report = match m_source_report {
+          Some(source_report) => source_report.wrap_err(message),
+          None => EyreReport::msg(message)
+        };
 
         Report {
           detail,

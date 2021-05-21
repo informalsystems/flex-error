@@ -4,11 +4,23 @@ use std::fmt::{Display, Formatter, Debug};
 
 pub use eyre::Report as EyreReport;
 
-pub trait IsErrorReport {
+pub trait TraceError<E> {
+  fn trace_error(self, err: E, msg: String) -> Self;
+}
+
+pub struct SimpleTrace(pub String);
+
+pub type ErrorTrace = eyre::Report;
+
+pub trait ErrorSource {
+  type Source;
   type Detail;
 
-  fn to_error_report(self) -> (Self::Detail, EyreReport);
+  fn error_details(source: Self::Source) -> (Self::Detail, Option<EyreReport>);
 }
+
+pub type AsErrorDetail<Error> = < Error as ErrorSource >::Detail;
+pub type AsErrorSource<Error> = < Error as ErrorSource >::Source;
 
 #[derive(Debug)]
 pub struct Report<Detail> {
@@ -16,23 +28,58 @@ pub struct Report<Detail> {
   pub report: EyreReport,
 }
 
-pub type ReportDetail<Report> = < Report as IsErrorReport >::Detail;
+#[derive(Debug)]
+pub struct SimpleError<Detail>(Detail);
 
-impl <Detail> IsErrorReport for Report<Detail> {
+#[derive(Debug)]
+pub struct StdError<Detail>(Detail);
+
+#[derive(Debug)]
+pub struct NoError;
+
+impl <Detail> ErrorSource for Report<Detail> {
   type Detail = Detail;
+  type Source = Self;
 
-  fn to_error_report(self) -> (Self::Detail, EyreReport) {
-    (self.detail, self.report)
+  fn error_details(source: Self::Source) -> (Self::Detail, Option<EyreReport>) {
+    (source.detail, Some(source.report))
   }
 }
 
-impl <Detail> Report<Detail> {
-  pub fn new(detail: Detail, message: &str) -> Self
-  {
-    Report {
-      detail,
-      report: eyre::eyre!("{}", message)
-    }
+pub fn error_details<E: ErrorSource>
+  (source: E::Source)
+  -> (E::Detail, Option<EyreReport>)
+{
+  E::error_details(source)
+}
+
+impl <Detail> ErrorSource for SimpleError<Detail> {
+  type Detail = Detail;
+  type Source = Detail;
+
+  fn error_details(source: Self::Source) -> (Self::Detail, Option<EyreReport>) {
+    (source, None)
+  }
+}
+
+impl <Detail> ErrorSource for StdError<Detail>
+where
+  Detail: std::error::Error + Clone + Send + Sync + 'static,
+{
+  type Detail = Detail;
+  type Source = Detail;
+
+  fn error_details(source: Self::Source) -> (Self::Detail, Option<EyreReport>) {
+    (source.clone(), Some(EyreReport::new(source)))
+  }
+}
+
+impl ErrorSource for NoError {
+  type Detail = ();
+  type Source = ();
+
+  fn error_details(_: Self::Source) -> (Self::Detail, Option<EyreReport>) {
+    ((), None)
   }
 }
 

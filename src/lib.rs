@@ -1,2 +1,2 @@
-mod eyre;
-mod no_std;
+pub mod eyre;
+pub mod no_std;
