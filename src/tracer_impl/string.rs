@@ -18,15 +18,13 @@ where
   }
 }
 
-impl <E> ErrorTracer<E> for StringTracer
-where
-  E: Display
+impl ErrorTracer for StringTracer
 {
-  fn new_trace(err: &E) -> Self {
+  fn new_trace<E: Display>(err: &E) -> Self {
     StringTracer(format!("{}", err))
   }
 
-  fn add_trace(self, err: &E) -> Self {
+  fn add_trace<E: Display>(self, err: &E) -> Self {
     StringTracer(
       format!("{0}: {1}", err, self.0)
     )

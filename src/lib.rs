@@ -8,9 +8,8 @@ pub use tracer::*;
 pub use source::*;
 pub use report::*;
 
+// pub type DefaultTracer = tracer_impl::anyhow::AnyhowTracer;
 pub type DefaultTracer = tracer_impl::eyre::EyreTracer;
+// pub type DefaultTracer = tracer_impl::string::StringTracer;
 
-pub mod test;
-
-// pub mod eyre;
-// pub mod no_std;
+pub mod tests;

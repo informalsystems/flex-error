@@ -1,6 +1,8 @@
-pub trait ErrorTracer<E>
-{
-  fn new_trace(err: &E) -> Self;
+use std::fmt::Display;
 
-  fn add_trace(self, err: &E) -> Self;
+pub trait ErrorTracer
+{
+  fn new_trace<E: Display>(err: &E) -> Self;
+
+  fn add_trace<E: Display>(self, err: &E) -> Self;
 }

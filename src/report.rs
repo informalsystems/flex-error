@@ -1,3 +1,4 @@
+use std::fmt::{Display, Formatter, Debug};
 use super::source::ErrorSource;
 use super::tracer::ErrorTracer;
 
@@ -15,28 +16,51 @@ impl <Detail, Trace> ErrorSource<Trace> for ErrorReport<Detail, Trace> {
   }
 }
 
-pub fn trace_error
-  <Error, Source, Detail1, Detail2, Trace, Cont>
-  ( source: Source,
-    cont: Cont,
-  ) ->
-    ErrorReport<Detail2, Trace>
+impl <Detail, Trace>
+  ErrorReport<Detail, Trace>
 where
-  Error: ErrorSource<Trace, Source=Source, Detail=Detail1>,
-  Trace: ErrorTracer<Detail2>,
-  Cont: FnOnce(Detail1) -> Detail2,
+  Detail: Display,
+  Trace: ErrorTracer,
 {
-  let (detail1, m_trace1) = Error::error_details(source);
-  let detail2 = cont(detail1);
-  match m_trace1 {
-    Some(trace1) => {
-      let trace2 = trace1.add_trace(&detail2);
-      ErrorReport { detail: detail2, trace: trace2 }
-    }
-    None => {
-      let trace2 = Trace::new_trace(&detail2);
-      ErrorReport { detail: detail2, trace: trace2 }
+  pub fn trace_from<E, Cont>
+    ( source: E::Source,
+      cont: Cont,
+    ) -> Self
+  where
+    E: ErrorSource<Trace>,
+    Cont: FnOnce(E::Detail) -> Detail,
+  {
+    let (detail1, m_trace1) = E::error_details(source);
+    let detail2 = cont(detail1);
+    match m_trace1 {
+      Some(trace1) => {
+        let trace2 = trace1.add_trace(&detail2);
+        ErrorReport { detail: detail2, trace: trace2 }
+      }
+      None => {
+        let trace2 = Trace::new_trace(&detail2);
+        ErrorReport { detail: detail2, trace: trace2 }
+      }
     }
   }
+}
 
+impl <Detail, Trace> Debug
+  for ErrorReport<Detail, Trace>
+where
+  Trace: Debug
+{
+  fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+    self.trace.fmt(f)
+  }
+}
+
+impl <Detail, Trace> Display
+  for ErrorReport<Detail, Trace>
+where
+  Trace: Display
+{
+  fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
+    self.trace.fmt(f)
+  }
 }
