@@ -16,15 +16,15 @@ impl <Detail, Trace> ErrorSource<Trace> for ErrorReport<Detail, Trace> {
 }
 
 pub fn trace_error
-  <Error, Source, Detail1, Detail2, Trace>
+  <Error, Source, Detail1, Detail2, Trace, Cont>
   ( source: Source,
-    cont: impl FnOnce(Detail1) -> Detail2
+    cont: Cont,
   ) ->
     ErrorReport<Detail2, Trace>
 where
   Error: ErrorSource<Trace, Source=Source, Detail=Detail1>,
-  Detail2: Clone,
   Trace: ErrorTracer<Detail2>,
+  Cont: FnOnce(Detail1) -> Detail2,
 {
   let (detail1, m_trace1) = Error::error_details(source);
   let detail2 = cont(detail1);

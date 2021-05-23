@@ -1,13 +1,12 @@
-use crate::define_error;
-use crate::eyre::*;
+use crate::*;
 
 #[derive(Debug)]
 pub struct PrimitiveError;
 
 define_error!{ FooError;
   Foo(foo: String)
-  [SimpleError<PrimitiveError>] =>
+  [DetailOnly<PrimitiveError>] =>
     | err | { format_args!("foo error {}", err.foo) },
-  Unknown[NoError] =>
+  Unknown[NoSource] =>
     | _e | { format_args!("unknown error") },
 }

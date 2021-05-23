@@ -5,6 +5,9 @@ pub trait ErrorSource<Trace> {
   fn error_details(source: Self::Source) -> (Self::Detail, Option<Trace>);
 }
 
+pub type AsErrorDetail<Error, Trace> = < Error as ErrorSource<Trace> >::Detail;
+pub type AsErrorSource<Error, Trace> = < Error as ErrorSource<Trace> >::Source;
+
 #[derive(Debug)]
 pub struct NoSource;
 

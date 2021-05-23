@@ -1,5 +1,3 @@
-use std::fmt::{Display, Formatter};
-
 pub trait ErrorTracer<E>
 {
   fn new_trace(err: &E) -> Self;

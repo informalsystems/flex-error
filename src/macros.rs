@@ -25,7 +25,7 @@ macro_rules! define_error {
           $(
             $( $arg_name: $arg_type, )*
           )?
-          source: $crate::eyre::AsErrorDetail<$source>
+          source: $crate::AsErrorDetail<$source, $crate::DefaultTracer>
         }
 
         impl core::fmt::Display for [< $suberror SubError >] {
@@ -36,7 +36,7 @@ macro_rules! define_error {
         }
       )*
 
-      pub type $name = $crate::eyre::Report< [< $name Detail >] >;
+      pub type $name = $crate::ErrorReport< [< $name Detail >], $crate::DefaultTracer >;
 
       impl core::fmt::Display for [< $name Detail >] {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
@@ -72,30 +72,17 @@ macro_rules! define_error_constructor {
     paste::paste! [
       pub fn [< $suberror:lower _error >](
         $( $arg_name: $arg_type, )*
-        source: $crate::eyre::AsErrorSource< $source >
+        source: $crate::AsErrorSource< $source, $crate::DefaultTracer >
       ) -> $name
       {
-        use $crate::eyre::{Report, EyreReport, error_details};
-
-        let (source_detail, m_source_report) = error_details::< $source >(source);
-
-        let suberror = [< $suberror SubError >] {
-          $( $arg_name, )*
-          source: source_detail,
-        };
-
-        let detail = [< $name Detail >]::$suberror(suberror);
-
-        let message = format!("{}", detail);
-        let report = match m_source_report {
-          Some(source_report) => source_report.wrap_err(message),
-          None => EyreReport::msg(message)
-        };
-
-        Report {
-          detail,
-          report,
-        }
+        $crate::trace_error::<$source, _, _, _, _, _>(source,
+          | source_detail | {
+            let suberror = [< $suberror SubError >] {
+              $( $arg_name, )*
+              source: source_detail,
+            };
+            [< $name Detail >]::$suberror(suberror)
+          })
       }
     ];
   }
