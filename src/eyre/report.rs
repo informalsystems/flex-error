@@ -4,12 +4,6 @@ use std::fmt::{Display, Formatter, Debug};
 
 pub use eyre::Report as EyreReport;
 
-pub trait TraceError<E> {
-  fn trace_error(self, err: E, msg: String) -> Self;
-}
-
-pub struct SimpleTrace(pub String);
-
 pub type ErrorTrace = eyre::Report;
 
 pub trait ErrorSource {
