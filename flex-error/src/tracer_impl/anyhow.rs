@@ -1,5 +1,5 @@
 use anyhow;
-use std::fmt::Display;
+use core::fmt::Display;
 use crate::tracer::{ErrorTracer, ErrorMessageTracer};
 
 pub type AnyhowTracer = anyhow::Error;
@@ -7,12 +7,12 @@ pub type AnyhowTracer = anyhow::Error;
 impl ErrorMessageTracer for AnyhowTracer
 {
   fn new_message<E: Display>(err: &E) -> Self {
-    let message = format!("{}", err);
+    let message = alloc::format!("{}", err);
     AnyhowTracer::msg(message)
   }
 
   fn add_message<E: Display>(self, err: &E) -> Self {
-    let message = format!("{}", err);
+    let message = alloc::format!("{}", err);
     self.context(message)
   }
 }
@@ -26,7 +26,7 @@ where
   }
 
   fn add_trace(self, err: &E) -> Self {
-    let message = format!("{}", err);
+    let message = alloc::format!("{}", err);
     self.context(message)
   }
 }

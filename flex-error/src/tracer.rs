@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use core::fmt::Display;
 use super::source::{ErrorSource, StdError};
 
 pub trait ErrorMessageTracer {

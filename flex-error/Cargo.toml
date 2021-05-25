@@ -4,8 +4,6 @@ version = "0.1.0"
 authors = ["Soares Chen <soares.chen@maybevoid.com>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 paste = "1.0.5"
 eyre = { version = "0.6.5", optional = true }
@@ -13,7 +11,7 @@ anyhow = { version = "1.0.40", optional = true }
 
 [features]
 default = ["eyre_tracer"]
-eyre_tracer = ["eyre"]
-anyhow_tracer = ["anyhow"]
+std = []
 string_tracer = []
-no_std = ["string_tracer"]
+eyre_tracer = ["eyre", "std"]
+anyhow_tracer = ["anyhow", "std"]

@@ -1,4 +1,4 @@
-use std::fmt::{Display, Formatter, Debug};
+use core::fmt::{Display, Formatter, Debug};
 use super::source::ErrorSource;
 use super::tracer::ErrorMessageTracer;
 
@@ -61,5 +61,18 @@ where
 {
   fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
     self.trace.fmt(f)
+  }
+}
+
+#[cfg(feature = "std")]
+impl <Detail, Trace>
+  std::error::Error
+  for ErrorReport<Detail, Trace>
+where
+  Detail: Display,
+  Trace: std::error::Error + 'static,
+{
+  fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+    Some(&self.trace)
   }
 }

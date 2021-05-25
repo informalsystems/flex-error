@@ -9,4 +9,4 @@ edition = "2018"
 [dependencies]
 thiserror = "1.0.24"
 color-eyre = "0.5"
-flex-error = { path = "../flex-error", default-features = false, features = ["eyre_tracer"] }
+flex-error = { path = "../flex-error" }
