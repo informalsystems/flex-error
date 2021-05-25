@@ -1,0 +1,12 @@
+[package]
+name = "flex-error-demo-full"
+version = "0.1.0"
+authors = ["Soares Chen <soares.chen@maybevoid.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+thiserror = "1.0.24"
+color-eyre = "0.5"
+flex-error = { path = "../flex-error", default-features = false, features = ["eyre_tracer"] }

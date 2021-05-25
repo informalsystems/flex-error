@@ -1,6 +1,6 @@
 
 pub mod foo {
-  use crate::*;
+  use flex_error::*;
 
   use thiserror::Error;
 
@@ -29,7 +29,7 @@ pub mod foo {
 }
 
 pub mod bar {
-  use crate::*;
+  use flex_error::*;
   use super::foo;
 
   define_error!{ BarError;
@@ -44,24 +44,10 @@ pub mod bar {
   }
 }
 
-#[test]
-fn test() {
+fn main() -> Result<(), bar::BarError> {
   color_eyre::install().unwrap();
-  {
-    let err = foo::foo_error("No Foo".into(), foo::PrimitiveError);
-    println!("Error: {:?}", err.trace);
-  }
-  {
-    let err = foo::system_error(foo::SystemError::Error1);
-    println!("Error: {:?}", err.trace);
-  }
-  {
-    let err = foo::unknown_error();
-    println!("Error: {:?}", err.trace);
-  }
-  {
-    let err1 = foo::foo_error("Hello Foo".into(), foo::PrimitiveError);
-    let err2 = bar::foo_error("Foo has failed".into(), err1);
-    println!("Error: {:?}", err2.trace);
-  }
+
+  let err1 = foo::system_error(foo::SystemError::Error1);
+  let err2 = bar::foo_error("Foo has failed".into(), err1);
+  Err(err2)
 }

@@ -1,15 +1,18 @@
 mod tracer;
 mod source;
 mod report;
-mod macros;
+pub mod macros;
 pub mod tracer_impl;
 
 pub use tracer::*;
 pub use source::*;
 pub use report::*;
 
-// pub type DefaultTracer = tracer_impl::anyhow::AnyhowTracer;
-pub type DefaultTracer = tracer_impl::eyre::EyreTracer;
-// pub type DefaultTracer = tracer_impl::string::StringTracer;
+#[cfg(feature = "anyhow_tracer")]
+pub type DefaultTracer = tracer_impl::anyhow::AnyhowTracer;
 
-pub mod tests;
+#[cfg(feature = "eyre_tracer")]
+pub type DefaultTracer = tracer_impl::eyre::EyreTracer;
+
+#[cfg(feature = "string_tracer")]
+pub type DefaultTracer = tracer_impl::string::StringTracer;

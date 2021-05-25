@@ -7,8 +7,13 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-thiserror = "1.0.24"
 paste = "1.0.5"
-eyre = "0.6.5"
-color-eyre = "0.5"
-anyhow = "1.0.40"
+eyre = { version = "0.6.5", optional = true }
+anyhow = { version = "1.0.40", optional = true }
+
+[features]
+default = ["eyre_tracer"]
+eyre_tracer = ["eyre"]
+anyhow_tracer = ["anyhow"]
+string_tracer = []
+no_std = ["string_tracer"]

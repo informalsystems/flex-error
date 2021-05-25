@@ -1,2 +1,2 @@
 [workspace]
-members = [ "flex-error" ]
+members = [ "flex-error", "flex-error-demo-full" ]

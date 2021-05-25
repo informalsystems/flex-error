@@ -1,3 +1,4 @@
+pub use paste::paste;
 
 #[macro_export]
 macro_rules! define_error {
@@ -16,7 +17,7 @@ macro_rules! define_error_with_tracer {
       | $formatter_arg:pat | $formatter:expr
     ),* $(,)?
   ) => {
-    paste::paste![
+    $crate::macros::paste![
       #[derive(Debug)]
       pub enum [< $name Detail >] {
         $(
@@ -78,7 +79,7 @@ macro_rules! define_error_constructor {
     ( $( $arg_name:ident: $arg_type:ty ),* )
     [ NoSource ]
   ) => {
-    paste::paste! [
+    $crate::macros::paste! [
       pub fn [< $suberror:lower _error >](
         $( $arg_name: $arg_type, )*
       ) -> $name
@@ -102,7 +103,7 @@ macro_rules! define_error_constructor {
     ( $( $arg_name:ident: $arg_type:ty ),* )
     [ $source:ty ]
   ) => {
-    paste::paste! [
+    $crate::macros::paste! [
       pub fn [< $suberror:lower _error >](
         $( $arg_name: $arg_type, )*
         source: $crate::AsErrorSource< $source, $tracer >
