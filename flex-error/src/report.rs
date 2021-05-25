@@ -70,9 +70,10 @@ impl <Detail, Trace>
   for ErrorReport<Detail, Trace>
 where
   Detail: Display,
-  Trace: std::error::Error + 'static,
+  Trace: Debug + Display,
+  Trace: ErrorMessageTracer,
 {
   fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-    Some(&self.trace)
+    self.trace.as_error()
   }
 }

@@ -15,14 +15,20 @@ impl ErrorMessageTracer for EyreTracer
     let message = alloc::format!("{}", err);
     self.wrap_err(message)
   }
+
+  #[cfg(feature = "std")]
+  fn as_error(&self) -> Option<&(dyn std::error::Error + 'static)> {
+    use core::ops::Deref;
+    Some(self.deref())
+  }
 }
 
 impl <E> ErrorTracer<E> for EyreTracer
 where
-  E: Clone + std::error::Error + Send + Sync + 'static,
+  E: std::error::Error + Send + Sync + 'static,
 {
   fn new_trace(err: &E) -> Self {
-    EyreTracer::new(err.clone())
+    EyreTracer::new_message(err)
   }
 
   fn add_trace(self, err: &E) -> Self {

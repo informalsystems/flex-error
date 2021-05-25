@@ -15,14 +15,20 @@ impl ErrorMessageTracer for AnyhowTracer
     let message = alloc::format!("{}", err);
     self.context(message)
   }
+
+  #[cfg(feature = "std")]
+  fn as_error(&self) -> Option<&(dyn std::error::Error + 'static)> {
+    use core::ops::Deref;
+    Some(self.deref())
+  }
 }
 
 impl <E> ErrorTracer<E> for AnyhowTracer
 where
-  E: Clone + std::error::Error + Send + Sync + 'static,
+  E: std::error::Error + Send + Sync + 'static,
 {
   fn new_trace(err: &E) -> Self {
-    AnyhowTracer::new(err.clone())
+    AnyhowTracer::new_message(err)
   }
 
   fn add_trace(self, err: &E) -> Self {

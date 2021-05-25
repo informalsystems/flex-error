@@ -5,6 +5,9 @@ pub trait ErrorMessageTracer {
   fn new_message<E: Display>(message: &E) -> Self;
 
   fn add_message<E: Display>(self, message: &E) -> Self;
+
+  #[cfg(feature = "std")]
+  fn as_error(&self) -> Option<&(dyn std::error::Error + 'static)>;
 }
 
 pub trait ErrorTracer<E>: ErrorMessageTracer

@@ -15,6 +15,11 @@ impl ErrorMessageTracer for StringTracer
       alloc::format!("{0}: {1}", err, self.0)
     )
   }
+
+  #[cfg(feature = "std")]
+  fn as_error(&self) -> Option<&(dyn std::error::Error + 'static)> {
+    None
+  }
 }
 
 impl <E: Display> ErrorTracer<E> for StringTracer

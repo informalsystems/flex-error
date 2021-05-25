@@ -10,7 +10,7 @@ eyre = { version = "0.6.5", optional = true }
 anyhow = { version = "1.0.40", optional = true }
 
 [features]
-default = ["string_tracer"]
+default = ["eyre_tracer"]
 std = []
 string_tracer = []
 eyre_tracer = ["eyre", "std"]

@@ -77,25 +77,13 @@ macro_rules! define_suberror {
     $name:ident;
     $suberror:ident;
     ( $( $arg_name:ident: $arg_type:ty ),* )
-  ) => {
-    $crate::macros::paste! [
-      #[derive(Debug)]
-      pub struct [< Err $suberror >] {
-        $( $arg_name: $arg_type, )*
-      }
-    ];
-  };
-  ( $tracer:ty;
-    $name:ident;
-    $suberror:ident;
-    ( $( $arg_name:ident: $arg_type:ty ),* )
     $( [ $source:ty ] )?
   ) => {
     $crate::macros::paste! [
       #[derive(Debug)]
       pub struct [< Err $suberror >] {
-        $( $arg_name: $arg_type, )*
-        $( source: $crate::AsErrorDetail<$source, $tracer> )?
+        $( pub $arg_name: $arg_type, )*
+        $( pub source: $crate::AsErrorDetail<$source, $tracer> )?
       }
     ];
   };
