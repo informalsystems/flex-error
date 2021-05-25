@@ -1,8 +1,11 @@
 [package]
 name = "flex-error"
 version = "0.1.0"
-authors = ["Soares Chen <soares.chen@maybevoid.com>"]
 edition = "2018"
+license    = "Apache-2.0"
+repository = "https://github.com/informalsystems/flex-error"
+authors    = ["Informal Systems <hello@informal.systems>"]
+description = "Flexible error definitions using macros and traits"
 
 [dependencies]
 paste = "1.0.5"
