@@ -27,12 +27,12 @@ macro_rules! define_error_with_tracer {
       }
 
       $(
-        #[derive(Debug)]
-        pub struct [< Err $suberror >] {
-          $(
-            $( $arg_name: $arg_type, )*
-          )?
-          source: $crate::AsErrorDetail<$source, $tracer>
+        $crate::define_suberror! {
+          $tracer;
+          $name;
+          $suberror;
+          ( $( $( $arg_name : $arg_type ),* )? )
+          [ $source ]
         }
 
         impl core::fmt::Display for [< Err $suberror >] {
@@ -70,6 +70,38 @@ macro_rules! define_error_with_tracer {
   };
 }
 
+
+#[macro_export]
+macro_rules! define_suberror {
+  ( $tracer:ty;
+    $name:ident;
+    $suberror:ident;
+    ( $( $arg_name:ident: $arg_type:ty ),* )
+    [ NoSource ]
+  ) => {
+    $crate::macros::paste! [
+      #[derive(Debug)]
+      pub struct [< Err $suberror >] {
+        $( $arg_name: $arg_type, )*
+      }
+    ];
+  };
+  ( $tracer:ty;
+    $name:ident;
+    $suberror:ident;
+    ( $( $arg_name:ident: $arg_type:ty ),* )
+    [ $source:ty ]
+  ) => {
+    $crate::macros::paste! [
+      #[derive(Debug)]
+      pub struct [< Err $suberror >] {
+        $( $arg_name: $arg_type, )*
+        source: $crate::AsErrorDetail<$source, $tracer>
+      }
+    ];
+  };
+}
+
 #[macro_export]
 macro_rules! define_error_constructor {
   ( $tracer:ty;
@@ -85,7 +117,6 @@ macro_rules! define_error_constructor {
       {
         let detail = [< $name Detail >]::$suberror([< Err $suberror >] {
           $( $arg_name, )*
-          source: (),
         });
 
         let trace = $tracer::new_message(&detail);
