@@ -12,7 +12,7 @@ macro_rules! define_error_with_tracer {
   ( $tracer:ty; $name:ident; $(
       $suberror:ident
       $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
-      [ $source:ty ]
+      $( [ $source:ty ] )?
       | $formatter_arg:pat | $formatter:expr
     ),* $(,)?
   ) => {
@@ -32,7 +32,7 @@ macro_rules! define_error_with_tracer {
           $name;
           $suberror;
           ( $( $( $arg_name : $arg_type ),* )? )
-          [ $source ]
+          $( [ $source ] )?
         }
 
         impl core::fmt::Display for [< Err $suberror >] {
@@ -63,7 +63,7 @@ macro_rules! define_error_with_tracer {
           $name;
           $suberror;
           ( $( $( $arg_name : $arg_type ),* )? )
-          [ $source ]
+          $( [ $source ] )?
         }
       )*
     ];
@@ -77,7 +77,6 @@ macro_rules! define_suberror {
     $name:ident;
     $suberror:ident;
     ( $( $arg_name:ident: $arg_type:ty ),* )
-    [ NoSource ]
   ) => {
     $crate::macros::paste! [
       #[derive(Debug)]
@@ -90,13 +89,13 @@ macro_rules! define_suberror {
     $name:ident;
     $suberror:ident;
     ( $( $arg_name:ident: $arg_type:ty ),* )
-    [ $source:ty ]
+    $( [ $source:ty ] )?
   ) => {
     $crate::macros::paste! [
       #[derive(Debug)]
       pub struct [< Err $suberror >] {
         $( $arg_name: $arg_type, )*
-        source: $crate::AsErrorDetail<$source, $tracer>
+        $( source: $crate::AsErrorDetail<$source, $tracer> )?
       }
     ];
   };
@@ -108,7 +107,6 @@ macro_rules! define_error_constructor {
     $name:ident;
     $suberror:ident;
     ( $( $arg_name:ident: $arg_type:ty ),* )
-    [ NoSource ]
   ) => {
     $crate::macros::paste! [
       pub fn [< $suberror:lower _error >](

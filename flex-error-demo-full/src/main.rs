@@ -23,7 +23,7 @@ pub mod foo {
     System
       [ StdError<SystemError> ]
       | _ | { format_args!("system error") },
-    Unknown[NoSource]
+    Unknown
       | _ | { format_args!("unknown error") },
   }
 }
@@ -35,7 +35,6 @@ pub mod bar {
   define_error!{ BarError;
     Bar
       { bar: String }
-      [ NoSource ]
       | err | { format_args!("bar error {}", err.bar) },
     Foo
       { detail: String }
