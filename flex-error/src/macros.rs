@@ -109,7 +109,7 @@ macro_rules! define_error_constructor {
     ( $( $arg_name:ident: $arg_type:ty ),* )
   ) => {
     $crate::macros::paste! [
-      pub fn [< $suberror:lower _error >](
+      pub fn [< $suberror:snake _error >](
         $( $arg_name: $arg_type, )*
       ) -> $name
       {
@@ -132,7 +132,7 @@ macro_rules! define_error_constructor {
     [ $source:ty ]
   ) => {
     $crate::macros::paste! [
-      pub fn [< $suberror:lower _error >](
+      pub fn [< $suberror:snake _error >](
         $( $arg_name: $arg_type, )*
         source: $crate::AsErrorSource< $source, $tracer >
       ) -> $name
