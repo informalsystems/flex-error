@@ -18,12 +18,12 @@ pub mod foo {
   define_error!{ FooError;
     Foo
       { foo: String }
-      [ DetailOnly<PrimitiveError> ] =>
+      [ DetailOnly<PrimitiveError> ]
       | err | { format_args!("foo error: {}", err.foo) },
     System
-      [ StdError<SystemError> ] =>
+      [ StdError<SystemError> ]
       | _ | { format_args!("system error") },
-    Unknown[NoSource] =>
+    Unknown[NoSource]
       | _ | { format_args!("unknown error") },
   }
 }
@@ -35,11 +35,11 @@ pub mod bar {
   define_error!{ BarError;
     Bar
       { bar: String }
-      [ NoSource ] =>
+      [ NoSource ]
       | err | { format_args!("bar error {}", err.bar) },
     Foo
       { detail: String }
-      [ foo::FooError ] =>
+      [ foo::FooError ]
       | err | { format_args!("error caused by foo: {}", err.detail) },
   }
 }

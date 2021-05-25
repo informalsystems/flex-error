@@ -13,7 +13,6 @@ macro_rules! define_error_with_tracer {
       $suberror:ident
       $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
       [ $source:ty ]
-      =>
       | $formatter_arg:pat | $formatter:expr
     ),* $(,)?
   ) => {
