@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Debug};
 use super::source::ErrorSource;
-use super::tracer::ErrorTracer;
+use super::tracer::ErrorMessageTracer;
 
 pub struct ErrorReport<Detail, Trace> {
   pub detail: Detail,
@@ -18,27 +18,26 @@ impl <Detail, Trace> ErrorSource<Trace> for ErrorReport<Detail, Trace> {
 
 impl <Detail, Trace>
   ErrorReport<Detail, Trace>
-where
-  Detail: Display,
-  Trace: ErrorTracer,
 {
   pub fn trace_from<E, Cont>
     ( source: E::Source,
       cont: Cont,
     ) -> Self
   where
+    Detail: Display,
     E: ErrorSource<Trace>,
+    Trace: ErrorMessageTracer,
     Cont: FnOnce(E::Detail) -> Detail,
   {
     let (detail1, m_trace1) = E::error_details(source);
     let detail2 = cont(detail1);
     match m_trace1 {
       Some(trace1) => {
-        let trace2 = trace1.add_trace(&detail2);
+        let trace2 = trace1.add_message(&detail2);
         ErrorReport { detail: detail2, trace: trace2 }
       }
       None => {
-        let trace2 = Trace::new_trace(&detail2);
+        let trace2 = Trace::new_message(&detail2);
         ErrorReport { detail: detail2, trace: trace2 }
       }
     }

@@ -1,14 +1,2 @@
-[package]
-name = "error-macros"
-version = "0.1.0"
-authors = ["Soares Chen <soares.chen@gmail.com>"]
-edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-thiserror = "1.0.24"
-paste = "1.0.5"
-eyre = "0.6.5"
-color-eyre = "0.5"
-anyhow = "1.0.40"
+[workspace]
+members = [ "flex-error" ]

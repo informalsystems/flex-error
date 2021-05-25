@@ -1,2 +1,3 @@
-/target
+/target/
+/flex-error/target/
 Cargo.lock

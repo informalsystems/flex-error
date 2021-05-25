@@ -88,7 +88,7 @@ macro_rules! define_error_constructor {
           source: (),
         });
 
-        let trace = $tracer::new_trace(&detail);
+        let trace = $tracer::new_message(&detail);
         $crate::ErrorReport {
           detail,
           trace,

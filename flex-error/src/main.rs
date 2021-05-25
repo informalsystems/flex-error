@@ -1,4 +1,4 @@
-use error_macros::tests::{foo, bar};
+use flex_error::tests::{foo, bar};
 
 fn main() -> Result<(), bar::BarError> {
   color_eyre::install().unwrap();
