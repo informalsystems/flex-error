@@ -21,7 +21,7 @@ pub mod foo {
       [ DetailOnly<PrimitiveError> ]
       | err | { format_args!("foo error: {}", err.foo) },
     System
-      [ StdError<SystemError> ]
+      [ TraceOnly<SystemError> ]
       | _ | { format_args!("system error") },
     Unknown
       | _ | { format_args!("unknown error") },

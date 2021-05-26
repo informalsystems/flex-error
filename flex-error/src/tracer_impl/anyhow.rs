@@ -27,11 +27,11 @@ impl <E> ErrorTracer<E> for AnyhowTracer
 where
   E: std::error::Error + Send + Sync + 'static,
 {
-  fn new_trace(err: &E) -> Self {
-    AnyhowTracer::new_message(err)
+  fn new_trace(err: E) -> Self {
+    AnyhowTracer::new(err)
   }
 
-  fn add_trace(self, err: &E) -> Self {
+  fn add_trace(self, err: E) -> Self {
     let message = alloc::format!("{}", err);
     self.context(message)
   }

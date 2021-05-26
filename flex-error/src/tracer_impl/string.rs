@@ -24,11 +24,11 @@ impl ErrorMessageTracer for StringTracer
 
 impl <E: Display> ErrorTracer<E> for StringTracer
 {
-  fn new_trace(err: &E) -> Self {
+  fn new_trace(err: E) -> Self {
     StringTracer(alloc::format!("{}", err))
   }
 
-  fn add_trace(self, err: &E) -> Self {
+  fn add_trace(self, err: E) -> Self {
     StringTracer(
       alloc::format!("{0}: {1}", err, self.0)
     )

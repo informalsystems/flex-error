@@ -11,7 +11,9 @@ pub type AsErrorSource<Error, Trace> = < Error as ErrorSource<Trace> >::Source;
 #[derive(Debug)]
 pub struct NoSource;
 
-pub struct StdError<E>(E);
+pub struct DisplayError<E>(E);
+
+pub struct TraceOnly<E>(E);
 
 #[derive(Debug)]
 pub struct DetailOnly<Detail>(Detail);
