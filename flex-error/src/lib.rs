@@ -5,21 +5,28 @@ extern crate std;
 
 extern crate alloc;
 
-mod tracer;
-mod source;
-mod report;
 pub mod macros;
+mod report;
+mod source;
+mod tracer;
 pub mod tracer_impl;
 
-pub use tracer::*;
-pub use source::*;
 pub use report::*;
+pub use source::*;
+pub use tracer::*;
 
-#[cfg(feature = "anyhow_tracer")]
-pub type DefaultTracer = tracer_impl::anyhow::AnyhowTracer;
-
+// If `eyre_tracer` feature is active, it is the default error tracer
 #[cfg(feature = "eyre_tracer")]
 pub type DefaultTracer = tracer_impl::eyre::EyreTracer;
 
-#[cfg(feature = "string_tracer")]
+// Otherwise, if `eyre_tracer` feature is active, it is the default error tracer
+#[cfg(all(feature = "anyhow_tracer", not(feature = "eyre_tracer")))]
+pub type DefaultTracer = tracer_impl::anyhow::AnyhowTracer;
+
+// Otherwise, if `string_tracer` feature is active, it is the default error tracer
+#[cfg(all(
+    feature = "string_tracer",
+    not(feature = "eyre_tracer"),
+    not(feature = "anyhow_tracer")
+))]
 pub type DefaultTracer = tracer_impl::string::StringTracer;

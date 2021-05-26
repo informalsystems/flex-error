@@ -1,38 +1,37 @@
+use crate::tracer::{ErrorMessageTracer, ErrorTracer};
 use anyhow;
 use core::fmt::Display;
-use crate::tracer::{ErrorTracer, ErrorMessageTracer};
 
 pub type AnyhowTracer = anyhow::Error;
 
-impl ErrorMessageTracer for AnyhowTracer
-{
-  fn new_message<E: Display>(err: &E) -> Self {
-    let message = alloc::format!("{}", err);
-    AnyhowTracer::msg(message)
-  }
+impl ErrorMessageTracer for AnyhowTracer {
+    fn new_message<E: Display>(err: &E) -> Self {
+        let message = alloc::format!("{}", err);
+        AnyhowTracer::msg(message)
+    }
 
-  fn add_message<E: Display>(self, err: &E) -> Self {
-    let message = alloc::format!("{}", err);
-    self.context(message)
-  }
+    fn add_message<E: Display>(self, err: &E) -> Self {
+        let message = alloc::format!("{}", err);
+        self.context(message)
+    }
 
-  #[cfg(feature = "std")]
-  fn as_error(&self) -> Option<&(dyn std::error::Error + 'static)> {
-    use core::ops::Deref;
-    Some(self.deref())
-  }
+    #[cfg(feature = "std")]
+    fn as_error(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        use core::ops::Deref;
+        Some(self.deref())
+    }
 }
 
-impl <E> ErrorTracer<E> for AnyhowTracer
+impl<E> ErrorTracer<E> for AnyhowTracer
 where
-  E: std::error::Error + Send + Sync + 'static,
+    E: std::error::Error + Send + Sync + 'static,
 {
-  fn new_trace(err: E) -> Self {
-    AnyhowTracer::new(err)
-  }
+    fn new_trace(err: E) -> Self {
+        AnyhowTracer::new(err)
+    }
 
-  fn add_trace(self, err: E) -> Self {
-    let message = alloc::format!("{}", err);
-    self.context(message)
-  }
+    fn add_trace(self, err: E) -> Self {
+        let message = alloc::format!("{}", err);
+        self.context(message)
+    }
 }

@@ -70,7 +70,6 @@ macro_rules! define_error_with_tracer {
   };
 }
 
-
 #[macro_export]
 macro_rules! define_suberror {
   ( $tracer:ty;
