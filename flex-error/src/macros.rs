@@ -1,5 +1,69 @@
 pub use paste::paste;
 
+/// This is the main macro that implements a mini DSL to
+/// define error types using `flex-error`. The DSL syntax
+/// is as follows:
+///
+/// ```
+/// define_error! { ErrorName;
+///   SubErrorWithFieldsAndErrorSource
+///     { field1: Type1, field2: Type2, ... }
+///     [ ErrorSource ]
+///     | e | { format_args!(
+///       "format error message with field1: {}, field2: {}, source: {}",
+///       e.field1, e.field2, e.source)
+///     },
+///   SubErrorWithFieldsOnly
+///     { field1: Type1, field2: Type2, ... }
+///     | e | { format_args!(
+///       "format error message with field1: {}, field2: {}",
+///       e.field1, e.field2)
+///     },
+///   SubErrorWithSourceOnly
+///     [ ErrorSource ]
+///     | e | { format_args!(
+///       "format error message with source: {}",
+///       e.source)
+///     },
+///   SubError
+///     | e | { format_args!(
+///       "only suberror message")
+///     },
+/// }
+/// ```
+///
+/// Behind the scene, `define_error` does the following:
+///
+///   - Define an enum with the postfix `Detail`, e.g. an error named
+///     `FooError` would have the enum `FooErrorDetail` defined.
+///
+///   - Define the error name as a type alias to
+///     [`ErrorReport<ErrorNameDetail, DefaultTracer>`](crate::ErrorReport).
+///     e.g.`type FooError = ErrorReport<FooErrorDetail, DefaultTracer>;`.
+///
+///   - For each suberror, does the following:
+///
+///       - Define a variant with the suberror name in the detail enum.
+///         e.g. a `BarSubError` in `FooError` becomes a `BarSubError`
+///         variant in `FooErrorDetail`.
+///       - Define a struct with the `Subdetail` postfix. e.g.
+///         `BarSubError` would have a `BarSubErrorSubdetail` struct.
+///
+///         - The struct contains all named fields if specified.
+///
+///         - If an error source is specified, a `source` field is
+///           also defined with the type
+///           [`AsErrorDetail<ErrorSource>`](crate::AsErrorDetail).
+///           e.g. a suberror with
+///           [`DisplayError<SourceError>`](crate::DisplayError)
+///           would have the field `source: SourceError`.
+///
+///       - Implement [`Display`](std::fmt::Display) for the suberror
+///         using the provided formatter to format the arguments.
+///         The argument type of the formatter is the suberror subdetail struct.
+///
+///       - Define a suberror constructor function in snake case with the postfix
+///         `_error`.
 #[macro_export]
 macro_rules! define_error {
   ( $($expr:tt)+ ) => {
@@ -21,7 +85,7 @@ macro_rules! define_error_with_tracer {
       pub enum [< $name Detail >] {
         $(
           $suberror (
-            [< Err $suberror >]
+            [< $suberror Subdetail >]
           ),
         )*
       }
@@ -35,7 +99,7 @@ macro_rules! define_error_with_tracer {
           $( [ $source ] )?
         }
 
-        impl core::fmt::Display for [< Err $suberror >] {
+        impl core::fmt::Display for [< $suberror Subdetail >] {
           fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
             let $formatter_arg = self;
             write!(f, "{}",  $formatter)
@@ -80,7 +144,7 @@ macro_rules! define_suberror {
   ) => {
     $crate::macros::paste! [
       #[derive(Debug)]
-      pub struct [< Err $suberror >] {
+      pub struct [< $suberror Subdetail >] {
         $( pub $arg_name: $arg_type, )*
         $( pub source: $crate::AsErrorDetail<$source, $tracer> )?
       }
@@ -100,7 +164,7 @@ macro_rules! define_error_constructor {
         $( $arg_name: $arg_type, )*
       ) -> $name
       {
-        let detail = [< $name Detail >]::$suberror([< Err $suberror >] {
+        let detail = [< $name Detail >]::$suberror([< $suberror Subdetail >] {
           $( $arg_name, )*
         });
 
@@ -126,7 +190,7 @@ macro_rules! define_error_constructor {
       {
         $crate::ErrorReport::trace_from::<$source, _>(source,
           | source_detail | {
-            [< $name Detail >]::$suberror([< Err $suberror >] {
+            [< $name Detail >]::$suberror([< $suberror Subdetail >] {
               $( $arg_name, )*
               source: source_detail,
             })

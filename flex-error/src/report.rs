@@ -2,6 +2,15 @@ use super::source::ErrorSource;
 use super::tracer::ErrorMessageTracer;
 use core::fmt::{Debug, Display, Formatter};
 
+/// An [`ErrorSource`] that provides both the error
+/// detail and error trace separately. The error trace in an error report
+/// also already contains the trace of the current error detail already.
+/// so new errors that arise from an `ErrorReport` only need to access
+/// the `trace` object to add new traces to it.
+///
+/// `ErrorReport` should be used for all application code that uses `flex-error`.
+/// When defining new error types using [`define_error`], the error name is defined
+/// as a type alias to `ErrorReport`.
 pub struct ErrorReport<Detail, Trace> {
     pub detail: Detail,
     pub trace: Trace,

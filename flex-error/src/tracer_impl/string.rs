@@ -2,6 +2,10 @@ use crate::tracer::{ErrorMessageTracer, ErrorTracer};
 use alloc::string::String;
 use core::fmt::{Debug, Display, Formatter};
 
+/// A naive string tracer serializes error messages into
+/// string and simply concatenate them together.
+/// This can be used for example in `no_std` environment,
+/// which may not support more complex error tracers.
 pub struct StringTracer(pub String);
 
 impl ErrorMessageTracer for StringTracer {

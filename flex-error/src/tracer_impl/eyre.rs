@@ -2,6 +2,7 @@ use crate::tracer::{ErrorMessageTracer, ErrorTracer};
 use core::fmt::Display;
 use eyre;
 
+/// Type alias to [`eyre::Report`].
 pub type EyreTracer = eyre::Report;
 
 impl ErrorMessageTracer for EyreTracer {

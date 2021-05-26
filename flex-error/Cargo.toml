@@ -6,6 +6,7 @@ license    = "Apache-2.0"
 repository = "https://github.com/informalsystems/flex-error"
 authors    = ["Informal Systems <hello@informal.systems>"]
 description = "Flexible error definitions using macros and traits"
+readme = "../README.md"
 
 [dependencies]
 paste = "1.0.5"
@@ -15,6 +16,5 @@ anyhow = { version = "1.0.40", optional = true }
 [features]
 default = ["eyre_tracer", "anyhow_tracer"]
 std = []
-string_tracer = []
 eyre_tracer = ["eyre", "std"]
 anyhow_tracer = ["anyhow", "std"]
