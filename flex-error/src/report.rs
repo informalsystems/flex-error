@@ -9,7 +9,7 @@ use core::fmt::{Debug, Display, Formatter};
 /// the `trace` object to add new traces to it.
 ///
 /// `ErrorReport` should be used for all application code that uses `flex-error`.
-/// When defining new error types using [`define_error`], the error name is defined
+/// When defining new error types using [`define_error!`], the error name is defined
 /// as a type alias to `ErrorReport`.
 pub struct ErrorReport<Detail, Trace> {
     pub detail: Detail,

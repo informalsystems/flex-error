@@ -1,4 +1,4 @@
-use std::marker::PhantomData;
+use core::marker::PhantomData;
 
 /// A type implementing `ErrorSource<Trace>` is a proxy type that provides the
 /// capability of extracting from an error source of type `Self::Source`,
@@ -40,7 +40,7 @@ pub type AsErrorSource<Error, Trace> = <Error as ErrorSource<Trace>>::Source;
 /// that are not caused by any error source.
 ///
 /// In practice, it is also possible to omit specifying any error source inside
-/// [`define_error`](crate::define_error), which has similar effect as using
+/// [`define_error!`](crate::define_error), which has similar effect as using
 /// `NoSource` but with the `source` field omitted entirely.
 pub struct NoSource;
 
