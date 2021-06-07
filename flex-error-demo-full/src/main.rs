@@ -34,9 +34,9 @@ pub mod foo {
 
     define_error! { FooError;
       Foo
-        { foo: String }
+        { foo_val: String }
         [ DetailOnly<PrimitiveError> ]
-        | err | { format_args!("foo error: {}", err.foo) },
+        | err | { format_args!("foo error: {}", err.foo_val) },
       System
         [ StdError<SystemError> ]
         | _ | { format_args!("system error") },

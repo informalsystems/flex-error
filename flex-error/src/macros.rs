@@ -168,7 +168,7 @@ pub struct FooSubdetail {
 pub fn foo_error(action: String, source: FooError) { ... }
 ```
 
-In the formatter for QuuxErrorDetail::Foo, we can also see that it does not
+In the formatter for `QuuxErrorDetail::Foo`, we can also see that it does not
 need to include the error string from `FooError`. This is because the error
 tracer already takes care of the source error trace, so the full trace is
 automatically tracked inside `foo_error`. The outer error only need to
@@ -178,14 +178,14 @@ add additional detail about what caused the source error to be raised.
 #[macro_export]
 macro_rules! define_error {
   ( $($expr:tt)+ ) => {
-    define_error_with_tracer![ $crate::DefaultTracer; $( $expr )* ];
+    $crate::define_error_with_tracer![ $crate::DefaultTracer; $( $expr )* ];
   };
 }
 
 /// This macro allows error types to be defined with custom error tracer types
 /// other than [`DefaultTracer`](crate::DefaultTracer). Behind the scene,
 /// a macro call to `define_error!{ ... } really expands to
-/// `define_error_with_tracer!{ flex_error::DefaultTracer; ... }
+/// `define_error_with_tracer!{ flex_error::DefaultTracer; ... }`
 #[macro_export]
 macro_rules! define_error_with_tracer {
   ( $tracer:ty; $name:ident; $(
@@ -251,6 +251,7 @@ macro_rules! define_error_with_tracer {
 
 /// Internal macro used to define suberror structs
 #[macro_export]
+#[doc(hidden)]
 macro_rules! define_suberror {
   ( $tracer:ty;
     $name:ident;
@@ -270,6 +271,7 @@ macro_rules! define_suberror {
 
 /// Internal macro used to define suberror constructor functions
 #[macro_export]
+#[doc(hidden)]
 macro_rules! define_error_constructor {
   ( $tracer:ty;
     $name:ident;
@@ -285,7 +287,7 @@ macro_rules! define_error_constructor {
           $( $arg_name, )*
         });
 
-        let trace = $tracer::new_message(&detail);
+        let trace = < $tracer as $crate::ErrorMessageTracer >::new_message(&detail);
         $crate::ErrorReport {
           detail,
           trace,

@@ -1,5 +1,4 @@
 use crate::tracer::{ErrorMessageTracer, ErrorTracer};
-use anyhow;
 use core::fmt::Display;
 
 /// Type alias to [`anyhow::Error`]
