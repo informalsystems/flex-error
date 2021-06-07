@@ -51,7 +51,6 @@ pub struct NoSource;
 /// an error trace that is traced from its string representation.
 pub struct DisplayError<E>(PhantomData<E>);
 
-
 /// An [`ErrorSource`] that should implement [`Error`](std::error::Error) and
 /// other constraints such as `Send`, `Sync`, `'static`, so that it can be traced
 /// by error tracing libraries such as [`eyre`] and [`anyhow`]. Because these libraries
@@ -99,10 +98,9 @@ impl<Trace> ErrorSource<Trace> for NoSource {
     }
 }
 
-impl <Trace> ErrorSource<Trace> for TraceOnly<Trace> {
-  type Detail = ();
-  type Source = Trace;
-
+impl<Trace> ErrorSource<Trace> for TraceOnly<Trace> {
+    type Detail = ();
+    type Source = Trace;
 
     fn error_details(source: Self::Source) -> (Self::Detail, Option<Trace>) {
         ((), Some(source))

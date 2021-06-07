@@ -69,8 +69,5 @@ pub type DefaultTracer = tracer_impl::eyre::EyreTracer;
 pub type DefaultTracer = tracer_impl::anyhow::AnyhowTracer;
 
 // Otherwise, if `string_tracer` feature is active, it is the default error tracer
-#[cfg(all(
-    not(feature = "eyre_tracer"),
-    not(feature = "anyhow_tracer")
-))]
+#[cfg(all(not(feature = "eyre_tracer"), not(feature = "anyhow_tracer")))]
 pub type DefaultTracer = tracer_impl::string::StringTracer;

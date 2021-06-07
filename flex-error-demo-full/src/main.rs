@@ -1,19 +1,19 @@
 pub mod test {
-  use flex_error::*;
-  use thiserror::Error;
-  #[derive(Debug, Error, Clone)]
-  #[error("external")]
-  pub struct ExternalError;
+    use flex_error::*;
+    use thiserror::Error;
+    #[derive(Debug, Error, Clone)]
+    #[error("external")]
+    pub struct ExternalError;
 
-  define_error! { FooError;
-    Bar
-      { code: u32 }
-      [ DisplayError<ExternalError> ]
-      | e | { format_args!("Bar error with code {}", e.code) },
-    Baz
-      { extra: String }
-      | e | { format_args!("General Baz error with extra detail: {}", e.extra) }
-  }
+    define_error! { FooError;
+      Bar
+        { code: u32 }
+        [ DisplayError<ExternalError> ]
+        | e | { format_args!("Bar error with code {}", e.code) },
+      Baz
+        { extra: String }
+        | e | { format_args!("General Baz error with extra detail: {}", e.extra) }
+    }
 }
 
 pub mod foo {
