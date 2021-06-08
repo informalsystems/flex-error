@@ -1,20 +1,22 @@
 pub mod test {
     use flex_error::*;
     use thiserror::Error;
-    #[derive(Debug, Error, Clone, Eq, PartialEq)]
+    #[derive(Debug, Error, Eq, PartialEq, Clone)]
     #[error("external")]
     pub struct ExternalError;
 
     define_error! {
-      [derive(Debug, PartialEq)]
-      FooError;
+      #[derive(Debug, Eq, PartialEq, Clone)]
+      FooError {
         Bar
           { code: u32 }
           [ DisplayError<ExternalError> ]
           | e | { format_args!("Bar error with code {}", e.code) },
+
         Baz
           { extra: String }
-          | e | { format_args!("General Baz error with extra detail: {}", e.extra) }
+          | e | { format_args!("General Baz error with extra detail: {}", e.extra) },
+      }
     }
 }
 
@@ -23,10 +25,10 @@ pub mod foo {
 
     use thiserror::Error;
 
-    #[derive(Debug, Eq, PartialEq)]
+    #[derive(Debug, Clone, Eq, PartialEq)]
     pub struct PrimitiveError;
 
-    #[derive(Debug, Error, Clone)]
+    #[derive(Debug, Clone, Error, PartialEq)]
     pub enum SystemError {
         #[error("error1")]
         Error1,
@@ -35,8 +37,8 @@ pub mod foo {
     }
 
     define_error! {
-      [derive(Debug)]
-      FooError ;
+      #[derive(Debug, Clone, PartialEq, Eq)]
+      FooError {
         Foo
           { foo_val: String }
           [ DetailOnly<PrimitiveError> ]
@@ -46,6 +48,7 @@ pub mod foo {
           | _ | { format_args!("system error") },
         Unknown
           | _ | { format_args!("unknown error") },
+      }
     }
 }
 
@@ -54,8 +57,8 @@ pub mod bar {
     use flex_error::*;
 
     define_error! {
-      [ derive(Debug) ]
-      BarError ;
+      #[derive(Debug, Clone, PartialEq, Eq)]
+      BarError {
         Bar
           { bar: String }
           | err | { format_args!("bar error {}", err.bar) },
@@ -63,6 +66,7 @@ pub mod bar {
           { detail: String }
           [ foo::FooError ]
           | err | { format_args!("error caused by foo: {}", err.detail) },
+      }
     }
 }
 
