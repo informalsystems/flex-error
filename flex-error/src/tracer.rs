@@ -1,4 +1,4 @@
-use super::source::{DisplayError, ErrorSource, StdError};
+use super::source::{DisplayOnly, DisplayError, ErrorSource, StdError};
 use core::fmt::Display;
 
 /// An `ErrorMessageTracer` can be used to generically trace
@@ -71,6 +71,20 @@ where
     fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
         let trace = Tracer::new_message(&source);
         (source, Some(trace))
+    }
+}
+
+impl<E, Tracer> ErrorSource<Tracer> for DisplayOnly<E>
+where
+    E: Display,
+    Tracer: ErrorMessageTracer,
+{
+    type Detail = ();
+    type Source = E;
+
+    fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
+        let trace = Tracer::new_message(&source);
+        ((), Some(trace))
     }
 }
 

@@ -12,6 +12,7 @@ use core::marker::PhantomData;
 /// There are currently 4 types of error sources:
 ///   - [`NoSource`] - Indicating the lack of any error source
 ///   - [`DisplayError`] - An error source that implements [`Display`](std::fmt::Display).
+///   - [`DisplayOnly`] - An error source that implements [`Display`](std::fmt::Display) and do not provide additional detail.
 ///   - [`DetailOnly`] - An error source that do not contain any error trace
 ///   - [`StdError`] - An error source that implements [`Error`](std::error::Error) with no detail.
 ///   - [`ErrorReport`](crate::report::ErrorReport) - An error type defined by `flex-error` that contains
@@ -50,6 +51,9 @@ pub struct NoSource;
 /// Both its `Source` and `Detail` types are `E`. When extraced, it also provides
 /// an error trace that is traced from its string representation.
 pub struct DisplayError<E>(PhantomData<E>);
+
+
+pub struct DisplayOnly<E>(PhantomData<E>);
 
 /// An [`ErrorSource`] that should implement [`Error`](std::error::Error) and
 /// other constraints such as `Send`, `Sync`, `'static`, so that it can be traced

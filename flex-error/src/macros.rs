@@ -6,30 +6,32 @@ pub use paste::paste;
   is as follows:
 
   ```ignore
-  define_error! { ErrorName;
-    SubErrorWithFieldsAndErrorSource
-      { field1: Type1, field2: Type2, ... }
-      [ ErrorSource ]
-      | e | { format_args!(
-        "format error message with field1: {}, field2: {}, source: {}",
-        e.field1, e.field2, e.source)
-      },
-    SubErrorWithFieldsOnly
-      { field1: Type1, field2: Type2, ... }
-      | e | { format_args!(
-        "format error message with field1: {}, field2: {}",
-        e.field1, e.field2)
-      },
-    SubErrorWithSourceOnly
-      [ ErrorSource ]
-      | e | { format_args!(
-        "format error message with source: {}",
-        e.source)
-      },
-    SubError
-      | e | { format_args!(
-        "only suberror message")
-      },
+  define_error! {
+    ErrorName {
+      SubErrorWithFieldsAndErrorSource
+        { field1: Type1, field2: Type2, ... }
+        [ ErrorSource ]
+        | e | { format_args!(
+          "format error message with field1: {}, field2: {}, source: {}",
+          e.field1, e.field2, e.source)
+        },
+      SubErrorWithFieldsOnly
+        { field1: Type1, field2: Type2, ... }
+        | e | { format_args!(
+          "format error message with field1: {}, field2: {}",
+          e.field1, e.field2)
+        },
+      SubErrorWithSourceOnly
+        [ ErrorSource ]
+        | e | { format_args!(
+          "format error message with source: {}",
+          e.source)
+        },
+      SubError
+        | e | { format_args!(
+          "only suberror message")
+        },
+    }
   }
   ```
 
@@ -85,14 +87,16 @@ pub use paste::paste;
   // An external error type implementing Display
   use external_crate::ExternalError;
 
-  define_error! { FooError;
-    Bar
-      { code: u32 }
-      [ DisplayError<ExternalError> ]
-      | e | { format_args!("Bar error with code {}", e.code) },
-    Baz
-      { extra: String }
-      | e | { format_args!("General Baz error with extra detail: {}", e.extra) }
+  define_error! {
+    FooError {
+      Bar
+        { code: u32 }
+        [ DisplayError<ExternalError> ]
+        | e | { format_args!("Bar error with code {}", e.code) },
+      Baz
+        { extra: String }
+        | e | { format_args!("General Baz error with extra detail: {}", e.extra) }
+    }
   }
   ```
 
@@ -147,12 +151,14 @@ pub use paste::paste;
   as a source in other error definitions. For example:
 
   ```ignore
-  define_error! { QuuxError;
-    Foo
-      { action: String }
-      [ FooError ]
-      | e | { format_args!("error arised from Foo when performing action {}", e.action) },
-    ...
+  define_error! {
+    QuuxError {
+      Foo
+        { action: String }
+        [ FooError ]
+        | e | { format_args!("error arised from Foo when performing action {}", e.action) },
+      ...
+    }
   }
   ```
 
