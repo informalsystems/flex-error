@@ -177,8 +177,19 @@ add additional detail about what caused the source error to be raised.
 **/
 #[macro_export]
 macro_rules! define_error {
-  ( $($expr:tt)+ ) => {
-    $crate::define_error_with_tracer![ $crate::DefaultTracer; $( $expr )* ];
+  ( $name:ident; $($expr:tt)+ ) => {
+    $crate::define_error_with_tracer![
+      $crate::DefaultTracer;
+      [] $name;
+      $( $expr )*
+    ];
+  };
+  ( $derive:tt $name:ident; $($expr:tt)+ ) => {
+    $crate::define_error_with_tracer![
+      $crate::DefaultTracer;
+      $derive $name;
+      $( $expr )*
+    ];
   };
 }
 
@@ -188,7 +199,9 @@ macro_rules! define_error {
 /// `define_error_with_tracer!{ flex_error::DefaultTracer; ... }`
 #[macro_export]
 macro_rules! define_error_with_tracer {
-  ( $tracer:ty; $name:ident; $(
+  ( $tracer:ty;
+    $derive:tt $name:ident;
+    $(
       $suberror:ident
       $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
       $( [ $source:ty ] )?
@@ -208,7 +221,7 @@ macro_rules! define_error_with_tracer {
       $(
         $crate::define_suberror! {
           $tracer;
-          $name;
+          $derive $name ;
           $suberror;
           ( $( $( $arg_name : $arg_type ),* )? )
           $( [ $source ] )?
@@ -254,18 +267,36 @@ macro_rules! define_error_with_tracer {
 #[doc(hidden)]
 macro_rules! define_suberror {
   ( $tracer:ty;
-    $name:ident;
+    [ $( $attr:meta )? ] $name:ident;
     $suberror:ident;
     ( $( $arg_name:ident: $arg_type:ty ),* )
     $( [ $source:ty ] )?
   ) => {
     $crate::macros::paste! [
-      #[derive(Debug)]
-      pub struct [< $suberror Subdetail >] {
-        $( pub $arg_name: $arg_type, )*
-        $( pub source: $crate::AsErrorDetail<$source, $tracer> )?
-      }
+      $crate::define_struct![
+        [ $( $attr )? ];
+        pub struct [< $suberror Subdetail >] {
+          $( pub $arg_name: $arg_type, )*
+          $( pub source: $crate::AsErrorDetail<$source, $tracer> )?
+        }
+      ];
     ];
+  };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! define_struct {
+  ( [ ];
+    $body:item
+  ) => {
+    $body
+  };
+  ( [ $attr:meta ];
+    $body:item
+  ) => {
+    #[ $attr ]
+    $body
   };
 }
 

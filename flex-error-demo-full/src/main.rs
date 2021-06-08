@@ -1,18 +1,20 @@
 pub mod test {
     use flex_error::*;
     use thiserror::Error;
-    #[derive(Debug, Error, Clone)]
+    #[derive(Debug, Error, Clone, Eq, PartialEq)]
     #[error("external")]
     pub struct ExternalError;
 
-    define_error! { FooError;
-      Bar
-        { code: u32 }
-        [ DisplayError<ExternalError> ]
-        | e | { format_args!("Bar error with code {}", e.code) },
-      Baz
-        { extra: String }
-        | e | { format_args!("General Baz error with extra detail: {}", e.extra) }
+    define_error! {
+      [derive(Debug, PartialEq)]
+      FooError;
+        Bar
+          { code: u32 }
+          [ DisplayError<ExternalError> ]
+          | e | { format_args!("Bar error with code {}", e.code) },
+        Baz
+          { extra: String }
+          | e | { format_args!("General Baz error with extra detail: {}", e.extra) }
     }
 }
 
@@ -21,7 +23,7 @@ pub mod foo {
 
     use thiserror::Error;
 
-    #[derive(Debug)]
+    #[derive(Debug, Eq, PartialEq)]
     pub struct PrimitiveError;
 
     #[derive(Debug, Error, Clone)]
@@ -32,16 +34,18 @@ pub mod foo {
         Error2,
     }
 
-    define_error! { FooError;
-      Foo
-        { foo_val: String }
-        [ DetailOnly<PrimitiveError> ]
-        | err | { format_args!("foo error: {}", err.foo_val) },
-      System
-        [ StdError<SystemError> ]
-        | _ | { format_args!("system error") },
-      Unknown
-        | _ | { format_args!("unknown error") },
+    define_error! {
+      [derive(Debug)]
+      FooError ;
+        Foo
+          { foo_val: String }
+          [ DetailOnly<PrimitiveError> ]
+          | err | { format_args!("foo error: {}", err.foo_val) },
+        System
+          [ StdError<SystemError> ]
+          | _ | { format_args!("system error") },
+        Unknown
+          | _ | { format_args!("unknown error") },
     }
 }
 
@@ -49,14 +53,16 @@ pub mod bar {
     use super::foo;
     use flex_error::*;
 
-    define_error! { BarError;
-      Bar
-        { bar: String }
-        | err | { format_args!("bar error {}", err.bar) },
-      Foo
-        { detail: String }
-        [ foo::FooError ]
-        | err | { format_args!("error caused by foo: {}", err.detail) },
+    define_error! {
+      [ derive(Debug) ]
+      BarError ;
+        Bar
+          { bar: String }
+          | err | { format_args!("bar error {}", err.bar) },
+        Foo
+          { detail: String }
+          [ foo::FooError ]
+          | err | { format_args!("error caused by foo: {}", err.detail) },
     }
 }
 
