@@ -1,5 +1,9 @@
 # flex-error
 
+[![Crate][crate-image]][crate-link]
+[![Docs][docs-image]][docs-link]
+[![Apache 2.0 Licensed][license-image]][license-link]
+
 `flex-error` is a lightweight Rust library that uses macros and traits to switch between different error tracing implementations and no_std. The library currently supports 3 modes via Cargo feature flags: `eyre_tracer` (default), `anyhow_tracer`, and `string_tracer` (no_std).
 
 The library separates out several concepts as traits: `ErrorDetail`, `ErrorTrace`, and `ErrorSource`.
@@ -40,3 +44,10 @@ Location:
   10: flex_error_demo_full::main::hb0f615a97c840949
       at flex-error/flex-error-demo-full/src/main.rs:50
 ```
+
+[crate-image]: https://img.shields.io/crates/v/flex-error.svg
+[crate-link]: https://crates.io/crates/flex-error
+[docs-image]: https://docs.rs/flex-error/badge.svg
+[docs-link]: https://docs.rs/flex-error/
+[license-image]: https://img.shields.io/badge/license-Apache2.0-blue.svg
+[license-link]: https://github.com/informalsystems/flex-error/blob/master/LICENSE
