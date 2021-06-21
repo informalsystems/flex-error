@@ -44,10 +44,14 @@ pub mod foo {
           [ DetailOnly<PrimitiveError> ]
           | err | { format_args!("foo error: {}", err.foo_val) },
         System
-          [ StdError<SystemError> ]
+          [ TraceError<SystemError> ]
           | _ | { format_args!("system error") },
         Unknown
           | _ | { format_args!("unknown error") },
+
+        Nested
+          [ Self ]
+          | _ | { format_args!("nested foo error") },
       }
     }
 }
@@ -74,6 +78,7 @@ fn main() -> Result<(), bar::BarError> {
     color_eyre::install().unwrap();
 
     let err1 = foo::system_error(foo::SystemError::Error1);
-    let err2 = bar::foo_error("Foo has failed".into(), err1);
-    Err(err2)
+    let err2 = foo::nested_error(err1);
+    let err3 = bar::foo_error("Foo has failed".into(), err2);
+    Err(err3)
 }

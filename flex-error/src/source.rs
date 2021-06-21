@@ -1,4 +1,7 @@
+use core::fmt::Display;
 use core::marker::PhantomData;
+
+use crate::tracer::{ErrorTracer, ErrorMessageTracer};
 
 /// A type implementing `ErrorSource<Trace>` is a proxy type that provides the
 /// capability of extracting from an error source of type `Self::Source`,
@@ -14,7 +17,7 @@ use core::marker::PhantomData;
 ///   - [`DisplayError`] - An error source that implements [`Display`](std::fmt::Display).
 ///   - [`DisplayOnly`] - An error source that implements [`Display`](std::fmt::Display) and do not provide additional detail.
 ///   - [`DetailOnly`] - An error source that do not contain any error trace
-///   - [`StdError`] - An error source that implements [`Error`](std::error::Error) with no detail.
+///   - [`TraceError`] - An error source that implements [`Error`](std::error::Error) with no detail.
 ///   - [`ErrorReport`](crate::report::ErrorReport) - An error type defined by `flex-error` that contains
 ///     both error details and error traces.
 
@@ -52,7 +55,6 @@ pub struct NoSource;
 /// an error trace that is traced from its string representation.
 pub struct DisplayError<E>(PhantomData<E>);
 
-
 pub struct DisplayOnly<E>(PhantomData<E>);
 
 /// An [`ErrorSource`] that should implement [`Error`](std::error::Error) and
@@ -60,7 +62,9 @@ pub struct DisplayOnly<E>(PhantomData<E>);
 /// by error tracing libraries such as [`eyre`] and [`anyhow`]. Because these libraries
 /// take ownership of the source error object, the error cannot be extracted as detail
 /// at the same time.
-pub struct StdError<E>(PhantomData<E>);
+pub struct TraceError<E>(PhantomData<E>);
+
+pub struct TraceClone<E>(PhantomData<E>);
 
 /// An [`ErrorSource`] that contains only the error trace with no detail.
 /// This can for example be used for upstream functions that return tracers like
@@ -70,7 +74,7 @@ pub struct StdError<E>(PhantomData<E>);
 /// [`ErrorReport`](crate::ErrorReport), and most likely it should also be the same as
 /// [`DefaultTracer`](crate::DefaultTracer).
 /// If you plan to use `flex-error` with different feature flags, you should
-/// classify the source as [`StdError`] instead.
+/// classify the source as [`TraceError`] instead.
 pub struct TraceOnly<Tracer>(PhantomData<Tracer>);
 
 /// An [`ErrorSource`] that only provides error details but do not provide any trace.
@@ -83,6 +87,8 @@ pub struct TraceOnly<Tracer>(PhantomData<Tracer>);
 /// source may give stronger hint to the reader that the particular error variant
 /// is caused by other underlying errors.
 pub struct DetailOnly<Detail>(PhantomData<Detail>);
+
+pub struct BoxDetail<Detail: ?Sized>(PhantomData<Detail>);
 
 impl<Detail, Trace> ErrorSource<Trace> for DetailOnly<Detail> {
     type Detail = Detail;
@@ -108,5 +114,61 @@ impl<Trace> ErrorSource<Trace> for TraceOnly<Trace> {
 
     fn error_details(source: Self::Source) -> (Self::Detail, Option<Trace>) {
         ((), Some(source))
+    }
+}
+
+impl<E, Tracer> ErrorSource<Tracer> for DisplayError<E>
+where
+    E: Display,
+    Tracer: ErrorMessageTracer,
+{
+    type Detail = E;
+    type Source = E;
+
+    fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
+        let trace = Tracer::new_message(&source);
+        (source, Some(trace))
+    }
+}
+
+impl<E, Tracer> ErrorSource<Tracer> for DisplayOnly<E>
+where
+    E: Display,
+    Tracer: ErrorMessageTracer,
+{
+    type Detail = ();
+    type Source = E;
+
+    fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
+        let trace = Tracer::new_message(&source);
+        ((), Some(trace))
+    }
+}
+
+impl<E, Tracer> ErrorSource<Tracer> for TraceClone<E>
+where
+    E: Clone,
+    Tracer: ErrorTracer<E>,
+{
+    type Detail = E;
+    type Source = E;
+
+    fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
+        let detail = source.clone();
+        let trace = Tracer::new_trace(source);
+        (detail, Some(trace))
+    }
+}
+
+impl<E, Tracer> ErrorSource<Tracer> for TraceError<E>
+where
+    Tracer: ErrorTracer<E>,
+{
+    type Detail = ();
+    type Source = E;
+
+    fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
+        let trace = Tracer::new_trace(source);
+        ((), Some(trace))
     }
 }

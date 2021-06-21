@@ -1,4 +1,5 @@
-use super::source::ErrorSource;
+use alloc::boxed::Box;
+use super::source::{ErrorSource, BoxDetail};
 use super::tracer::ErrorMessageTracer;
 use core::fmt::{Debug, Display, Formatter};
 
@@ -22,6 +23,17 @@ impl<Detail, Trace> ErrorSource<Trace> for ErrorReport<Detail, Trace> {
 
     fn error_details(source: Self::Source) -> (Self::Detail, Option<Trace>) {
         (source.detail, Some(source.trace))
+    }
+}
+
+impl <Detail, Trace> ErrorSource<Trace>
+    for BoxDetail<Detail>
+{
+    type Source = ErrorReport<Detail, Trace>;
+    type Detail = Box<Detail>;
+
+    fn error_details(source: Self::Source) -> (Self::Detail, Option<Trace>) {
+        (Box::new(source.detail), Some(source.trace))
     }
 }
 

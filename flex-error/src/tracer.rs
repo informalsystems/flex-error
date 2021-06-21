@@ -1,4 +1,3 @@
-use super::source::{DisplayOnly, DisplayError, ErrorSource, StdError};
 use core::fmt::Display;
 
 /// An `ErrorMessageTracer` can be used to generically trace
@@ -58,45 +57,4 @@ pub trait ErrorTracer<E>: ErrorMessageTracer {
     /// trace. So effectively, currently the error tracers can track at most
     /// one backtrace coming from the original error source.
     fn add_trace(self, err: E) -> Self;
-}
-
-impl<E, Tracer> ErrorSource<Tracer> for DisplayError<E>
-where
-    E: Display,
-    Tracer: ErrorMessageTracer,
-{
-    type Detail = E;
-    type Source = E;
-
-    fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
-        let trace = Tracer::new_message(&source);
-        (source, Some(trace))
-    }
-}
-
-impl<E, Tracer> ErrorSource<Tracer> for DisplayOnly<E>
-where
-    E: Display,
-    Tracer: ErrorMessageTracer,
-{
-    type Detail = ();
-    type Source = E;
-
-    fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
-        let trace = Tracer::new_message(&source);
-        ((), Some(trace))
-    }
-}
-
-impl<E, Tracer> ErrorSource<Tracer> for StdError<E>
-where
-    Tracer: ErrorTracer<E>,
-{
-    type Detail = ();
-    type Source = E;
-
-    fn error_details(source: Self::Source) -> (Self::Detail, Option<Tracer>) {
-        let trace = Tracer::new_trace(source);
-        ((), Some(trace))
-    }
 }

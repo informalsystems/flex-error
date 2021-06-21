@@ -298,6 +298,22 @@ macro_rules! define_suberror {
     $derive:tt $name:ident;
     $suberror:ident;
     ( $( $arg_name:ident: $arg_type:ty ),* )
+    [ Self ]
+  ) => {
+    $crate::macros::paste! [
+      $crate::define_struct![
+        $derive;
+        pub struct [< $suberror Subdetail >] {
+          $( pub $arg_name: $arg_type, )*
+          pub source: $crate::alloc::boxed::Box< [< $name Detail >] >
+        }
+      ];
+    ];
+  };
+  ( $tracer:ty;
+    $derive:tt $name:ident;
+    $suberror:ident;
+    ( $( $arg_name:ident: $arg_type:ty ),* )
     $( [ $source:ty ] )?
   ) => {
     $crate::macros::paste! [
@@ -347,6 +363,32 @@ macro_rules! define_error_constructor {
         });
 
         let trace = < $tracer as $crate::ErrorMessageTracer >::new_message(&detail);
+        $crate::ErrorReport {
+          detail,
+          trace,
+        }
+      }
+    ];
+  };
+  ( $tracer:ty;
+    $name:ident;
+    $suberror:ident;
+    ( $( $arg_name:ident: $arg_type:ty ),* )
+    [ Self ]
+  ) => {
+    $crate::macros::paste! [
+      pub fn [< $suberror:snake _error >](
+        $( $arg_name: $arg_type, )*
+        source: $crate::ErrorReport< [< $name Detail >], $tracer >
+      ) -> $name
+      {
+        let detail = [< $name Detail >]::$suberror([< $suberror Subdetail >] {
+          $( $arg_name, )*
+          source: Box::new(source.detail),
+        });
+
+        let trace = source.trace.add_message(&detail);
+
         $crate::ErrorReport {
           detail,
           trace,

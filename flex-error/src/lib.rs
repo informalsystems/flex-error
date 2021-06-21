@@ -36,7 +36,7 @@ use `flex-error`.
 #[cfg(feature = "std")]
 extern crate std;
 
-extern crate alloc;
+pub extern crate alloc;
 
 pub mod macros;
 mod report;
