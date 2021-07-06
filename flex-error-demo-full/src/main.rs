@@ -80,5 +80,9 @@ fn main() -> Result<(), bar::BarError> {
     let err1 = foo::system_error(foo::SystemError::Error1);
     let err2 = foo::nested_error(err1);
     let err3 = bar::foo_error("Foo has failed".into(), err2);
-    Err(err3)
+
+    println!("error: {:?}", err3);
+
+    // Err(err3)
+    Ok(())
 }

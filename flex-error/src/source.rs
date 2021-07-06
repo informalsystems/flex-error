@@ -1,7 +1,7 @@
 use core::fmt::Display;
 use core::marker::PhantomData;
 
-use crate::tracer::{ErrorTracer, ErrorMessageTracer};
+use crate::tracer::{ErrorMessageTracer, ErrorTracer};
 
 /// A type implementing `ErrorSource<Trace>` is a proxy type that provides the
 /// capability of extracting from an error source of type `Self::Source`,

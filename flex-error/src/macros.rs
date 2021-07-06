@@ -363,10 +363,7 @@ macro_rules! define_error_constructor {
         });
 
         let trace = < $tracer as $crate::ErrorMessageTracer >::new_message(&detail);
-        $crate::ErrorReport {
-          detail,
-          trace,
-        }
+        $crate::ErrorReport::new(detail, trace)
       }
     ];
   };
@@ -384,15 +381,12 @@ macro_rules! define_error_constructor {
       {
         let detail = [< $name Detail >]::$suberror([< $suberror Subdetail >] {
           $( $arg_name, )*
-          source: Box::new(source.detail),
+          source: Box::new(source.0),
         });
 
-        let trace = source.trace.add_message(&detail);
+        let trace = source.1.add_message(&detail);
 
-        $crate::ErrorReport {
-          detail,
-          trace,
-        }
+        $crate::ErrorReport::new(detail, trace)
       }
     ];
   };
