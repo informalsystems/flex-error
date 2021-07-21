@@ -263,6 +263,42 @@ macro_rules! define_error_with_tracer {
         }
       )*
 
+      $crate::define_main_error!($tracer, $name);
+
+      impl core::fmt::Display for [< $name Detail >] {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+          match self {
+            $(
+              Self::$suberror( suberror ) => {
+                write!( f, "{}",  suberror )
+              }
+            ),*
+          }
+        }
+      }
+
+      impl $name {
+        $(
+          $crate::define_error_constructor! {
+            $tracer;
+            $name;
+            $suberror;
+            ( $( $( $arg_name : $arg_type ),* )? )
+            $( [ $source ] )?
+          }
+        )*
+      }
+    ];
+  };
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! define_main_error {
+  ( $tracer:ty,
+    $name:ident
+  ) => {
+    $crate::macros::paste![
       pub struct $name (pub [< $name Detail >], pub $tracer);
 
       impl ErrorSource<$tracer> for $name {
@@ -292,18 +328,6 @@ macro_rules! define_error_with_tracer {
           {
               self.trace().fmt(f)
           }
-      }
-
-      impl core::fmt::Display for [< $name Detail >] {
-        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-          match self {
-            $(
-              Self::$suberror( suberror ) => {
-                write!( f, "{}",  suberror )
-              }
-            ),*
-          }
-        }
       }
 
       impl $name {
@@ -344,18 +368,8 @@ macro_rules! define_error_with_tracer {
             }
         }
       }
-
-      $(
-        $crate::define_error_constructor! {
-          $tracer;
-          $name;
-          $suberror;
-          ( $( $( $arg_name : $arg_type ),* )? )
-          $( [ $source ] )?
-        }
-      )*
     ];
-  };
+  }
 }
 
 /// Internal macro used to define suberror structs
@@ -422,18 +436,16 @@ macro_rules! define_error_constructor {
     ( $( $arg_name:ident: $arg_type:ty ),* )
   ) => {
     $crate::macros::paste! [
-      impl $name {
-        pub fn [< $suberror:snake >](
-          $( $arg_name: $arg_type, )*
-        ) -> $name
-        {
-          let detail = [< $name Detail >]::$suberror([< $suberror Subdetail >] {
-            $( $arg_name, )*
-          });
+      pub fn [< $suberror:snake >](
+        $( $arg_name: $arg_type, )*
+      ) -> $name
+      {
+        let detail = [< $name Detail >]::$suberror([< $suberror Subdetail >] {
+          $( $arg_name, )*
+        });
 
-          let trace = < $tracer as $crate::ErrorMessageTracer >::new_message(&detail);
-          $name(detail, trace)
-        }
+        let trace = < $tracer as $crate::ErrorMessageTracer >::new_message(&detail);
+        $name(detail, trace)
       }
     ];
   };
@@ -444,21 +456,19 @@ macro_rules! define_error_constructor {
     [ Self ]
   ) => {
     $crate::macros::paste! [
-      impl $name {
-        pub fn [< $suberror:snake >](
-          $( $arg_name: $arg_type, )*
-          source: $name
-        ) -> $name
-        {
-          let detail = [< $name Detail >]::$suberror([< $suberror Subdetail >] {
-            $( $arg_name, )*
-            source: Box::new(source.0),
-          });
+      pub fn [< $suberror:snake >](
+        $( $arg_name: $arg_type, )*
+        source: $name
+      ) -> $name
+      {
+        let detail = [< $name Detail >]::$suberror([< $suberror Subdetail >] {
+          $( $arg_name, )*
+          source: Box::new(source.0),
+        });
 
-          let trace = source.1.add_message(&detail);
+        let trace = source.1.add_message(&detail);
 
-          $name(detail, trace)
-        }
+        $name(detail, trace)
       }
     ];
   };
@@ -469,20 +479,18 @@ macro_rules! define_error_constructor {
     [ $source:ty ]
   ) => {
     $crate::macros::paste! [
-      impl $name {
-        pub fn [< $suberror:snake >](
-          $( $arg_name: $arg_type, )*
-          source: $crate::AsErrorSource< $source, $tracer >
-        ) -> $name
-        {
-          $name::trace_from::<$source, _>(source,
-            | source_detail | {
-              [< $name Detail >]::$suberror([< $suberror Subdetail >] {
-                $( $arg_name, )*
-                source: source_detail,
-              })
+      pub fn [< $suberror:snake >](
+        $( $arg_name: $arg_type, )*
+        source: $crate::AsErrorSource< $source, $tracer >
+      ) -> $name
+      {
+        $name::trace_from::<$source, _>(source,
+          | source_detail | {
+            [< $name Detail >]::$suberror([< $suberror Subdetail >] {
+              $( $arg_name, )*
+              source: source_detail,
             })
-        }
+          })
       }
     ];
   };
