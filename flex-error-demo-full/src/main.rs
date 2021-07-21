@@ -77,9 +77,9 @@ pub mod bar {
 fn main() -> Result<(), bar::BarError> {
     color_eyre::install().unwrap();
 
-    let err1 = foo::system_error(foo::SystemError::Error1);
-    let err2 = foo::nested_error(err1);
-    let err3 = bar::foo_error("Foo has failed".into(), err2);
+    let err1 = foo::FooError::system(foo::SystemError::Error1);
+    let err2 = foo::FooError::nested(err1);
+    let err3 = bar::BarError::foo("Foo has failed".into(), err2);
 
     println!("error: {:?}", err3);
 
