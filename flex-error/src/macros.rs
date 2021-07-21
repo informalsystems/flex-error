@@ -235,6 +235,8 @@ macro_rules! define_error_with_tracer {
     }
   ) => {
     $crate::macros::paste![
+      $crate::define_main_error!($tracer, $name);
+
       $crate::define_struct!{
         $derive;
         pub enum [< $name Detail >] {
@@ -262,8 +264,6 @@ macro_rules! define_error_with_tracer {
           }
         }
       )*
-
-      $crate::define_main_error!($tracer, $name);
 
       impl core::fmt::Display for [< $name Detail >] {
         fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> ::core::fmt::Result {
@@ -301,7 +301,7 @@ macro_rules! define_main_error {
     $crate::macros::paste![
       pub struct $name (pub [< $name Detail >], pub $tracer);
 
-      impl ErrorSource<$tracer> for $name {
+      impl $crate::ErrorSource<$tracer> for $name {
         type Source = Self;
         type Detail = [< $name Detail >];
 
@@ -315,7 +315,7 @@ macro_rules! define_main_error {
           $tracer: ::core::fmt::Debug,
       {
           fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-              self.trace().fmt(f)
+              ::core::fmt::Debug::fmt(self.trace(), f)
           }
       }
 
@@ -327,6 +327,18 @@ macro_rules! define_main_error {
             -> ::core::fmt::Result
           {
               self.trace().fmt(f)
+          }
+      }
+
+      #[cfg(feature = "std")]
+      impl ::std::error::Error for $name
+      where
+          [< $name Detail >]: ::core::fmt::Display,
+          $tracer: ::core::fmt::Debug + core::fmt::Display,
+          $tracer: $crate::ErrorMessageTracer,
+      {
+          fn source(&self) -> ::core::option::Option<&(dyn ::std::error::Error + 'static)> {
+              $crate::ErrorMessageTracer::as_error(self.trace())
           }
       }
 
@@ -344,7 +356,7 @@ macro_rules! define_main_error {
             $tracer: $crate::ErrorMessageTracer,
         {
             let detail = self.0;
-            let trace = self.1.add_message(message);
+            let trace = $crate::ErrorMessageTracer::add_message(self.1, message);
             $name(detail, trace)
         }
 
@@ -358,11 +370,11 @@ macro_rules! define_main_error {
             let detail2 = cont(detail1);
             match m_trace1 {
                 Some(trace1) => {
-                    let trace2 = trace1.add_message(&detail2);
+                    let trace2 = $crate::ErrorMessageTracer::add_message(trace1, &detail2);
                     $name(detail2, trace2)
                 }
                 None => {
-                    let trace2 = $tracer::new_message(&detail2);
+                    let trace2 = $crate::ErrorMessageTracer::new_message(&detail2);
                     $name(detail2, trace2)
                 }
             }
