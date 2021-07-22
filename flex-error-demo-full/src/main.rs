@@ -6,7 +6,8 @@ pub mod test {
     pub struct ExternalError;
 
     define_error! {
-      #[derive(Debug, Eq, PartialEq, Clone)]
+      #[derive(Debug, Clone)]
+      #[derive(Eq, PartialEq)]
       FooError {
         Bar
           { code: u32 }
