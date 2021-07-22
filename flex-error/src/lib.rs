@@ -39,12 +39,10 @@ extern crate std;
 pub extern crate alloc;
 
 pub mod macros;
-mod report;
 mod source;
 mod tracer;
 pub mod tracer_impl;
 
-pub use report::*;
 pub use source::*;
 pub use tracer::*;
 
