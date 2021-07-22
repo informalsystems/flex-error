@@ -51,13 +51,13 @@ pub mod foo {
           | err | { format_args!("foo error: {}", err.foo_val) },
         System
           [ TraceError<SystemError> ]
-          | _ | { format_args!("system error") },
+          | _ | { "system error" },
         Unknown
-          | _ | { format_args!("unknown error") },
+          | _ | { "unknown error" },
 
         Nested
           [ Self ]
-          | _ | { format_args!("nested foo error") },
+          | _ | { format_args!("nested foo error") }
       }
     }
 }
