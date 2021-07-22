@@ -190,10 +190,10 @@ macro_rules! define_error {
       $expr
     ];
   };
-  ( #$derive:tt $name:ident $expr:tt ) => {
+  ( #[$attr:meta] $name:ident $expr:tt ) => {
     $crate::define_error_with_tracer![
       $crate::DefaultTracer;
-      $derive $name;
+      [$attr] $name;
       $expr
     ];
   };
@@ -390,48 +390,46 @@ macro_rules! define_suberrors {
   ( $tracer:ty;
     $derive:tt $name:ident;
     [
-      $(
-        $suberror:ident
-          $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
-          $( [ $source:ty ] )?
-          | $formatter_arg:pat | $formatter:expr
-      ),* $(,)?
+      $suberror:ident
+        $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
+        $( [ $source:ty ] )?
+        | $formatter_arg:pat | $formatter:expr,
+
+      $($tail:tt)*
     ]
   ) => {
     $crate::macros::paste![
-      $(
-        $crate::define_suberror! {
+      $crate::define_suberror! {
+        $tracer;
+        $derive $name ;
+        $suberror;
+        ( $( $( $arg_name : $arg_type ),* )? )
+        $( [ $source ] )?
+      }
+
+      impl core::fmt::Display for [< $suberror Subdetail >] {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+          let $formatter_arg = self;
+          write!(f, "{}",  $formatter)
+        }
+      }
+
+      impl $name {
+        $crate::define_error_constructor! {
           $tracer;
-          $derive $name ;
+          $name;
           $suberror;
           ( $( $( $arg_name : $arg_type ),* )? )
           $( [ $source ] )?
         }
-
-        impl core::fmt::Display for [< $suberror Subdetail >] {
-          fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            let $formatter_arg = self;
-            write!(f, "{}",  $formatter)
-          }
-        }
-
-        impl $name {
-          $crate::define_error_constructor! {
-            $tracer;
-            $name;
-            $suberror;
-            ( $( $( $arg_name : $arg_type ),* )? )
-            $( [ $source ] )?
-          }
-        }
-      )*
+      }
     ];
 
-    // $crate::define_suberrors! {
-    //   $tracer;
-    //   $derive $name;
-    //   [ $( $rest )* ]
-    // }
+    $crate::define_suberrors! {
+      $tracer;
+      $derive $name;
+      [ $( $tail )* ]
+    }
   };
 }
 
