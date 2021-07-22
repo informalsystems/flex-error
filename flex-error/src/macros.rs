@@ -7,6 +7,7 @@ pub use paste::paste;
 
   ```ignore
   define_error! {
+    #[derive()]
     ErrorName {
       SubErrorWithFieldsAndErrorSource
         { field1: Type1, field2: Type2, ... }
@@ -226,67 +227,22 @@ macro_rules! define_error_with_tracer {
   ( $tracer:ty;
     $derive:tt $name:ident;
     {
-      $(
-        $suberror:ident
-        $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
-        $( [ $source:ty ] )?
-        | $formatter_arg:pat | $formatter:expr
-      ),* $(,)?
+      $($suberrors:tt)*
     }
   ) => {
     $crate::macros::paste![
       $crate::define_main_error!($tracer, $name);
 
-      $crate::define_struct!{
-        $derive;
-        pub enum [< $name Detail >] {
-          $(
-            $suberror (
-              [< $suberror Subdetail >]
-            ),
+      $crate::define_error_detail!($derive, $name,
+        [ $($suberrors)* ]);
+
+      $crate::define_suberrors! {
+        $tracer;
+        $derive $name ;
+        [ $(
+            $suberrors
           )*
-        }
-      }
-
-      $(
-        $crate::define_suberror! {
-          $tracer;
-          $derive $name ;
-          $suberror;
-          ( $( $( $arg_name : $arg_type ),* )? )
-          $( [ $source ] )?
-        }
-
-        impl core::fmt::Display for [< $suberror Subdetail >] {
-          fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-            let $formatter_arg = self;
-            write!(f, "{}",  $formatter)
-          }
-        }
-      )*
-
-      impl core::fmt::Display for [< $name Detail >] {
-        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-          match self {
-            $(
-              Self::$suberror( suberror ) => {
-                write!( f, "{}",  suberror )
-              }
-            ),*
-          }
-        }
-      }
-
-      impl $name {
-        $(
-          $crate::define_error_constructor! {
-            $tracer;
-            $name;
-            $suberror;
-            ( $( $( $arg_name : $arg_type ),* )? )
-            $( [ $source ] )?
-          }
-        )*
+        ]
       }
     ];
   };
@@ -382,6 +338,101 @@ macro_rules! define_main_error {
       }
     ];
   }
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! define_error_detail {
+  ( $derive:tt,
+    $name:ident,
+    [ $(
+        $suberror:ident
+        $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
+        $( [ $source:ty ] )?
+        | $formatter_arg:pat | $formatter:expr
+      ),* $(,)?
+    ]
+  ) => {
+    $crate::macros::paste! [
+      $crate::define_struct!{
+        $derive;
+        pub enum [< $name Detail >] {
+          $(
+            $suberror (
+              [< $suberror Subdetail >]
+            ),
+          )*
+        }
+      }
+
+      impl core::fmt::Display for [< $name Detail >] {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+          match self {
+            $(
+              Self::$suberror( suberror ) => {
+                write!( f, "{}",  suberror )
+              }
+            ),*
+          }
+        }
+      }
+    ];
+  }
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! define_suberrors {
+  ( $tracer:ty;
+    $derive:tt $name:ident;
+    []
+  ) => { };
+  ( $tracer:ty;
+    $derive:tt $name:ident;
+    [
+      $(
+        $suberror:ident
+          $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
+          $( [ $source:ty ] )?
+          | $formatter_arg:pat | $formatter:expr
+      ),* $(,)?
+    ]
+  ) => {
+    $crate::macros::paste![
+      $(
+        $crate::define_suberror! {
+          $tracer;
+          $derive $name ;
+          $suberror;
+          ( $( $( $arg_name : $arg_type ),* )? )
+          $( [ $source ] )?
+        }
+
+        impl core::fmt::Display for [< $suberror Subdetail >] {
+          fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+            let $formatter_arg = self;
+            write!(f, "{}",  $formatter)
+          }
+        }
+
+        impl $name {
+          $crate::define_error_constructor! {
+            $tracer;
+            $name;
+            $suberror;
+            ( $( $( $arg_name : $arg_type ),* )? )
+            $( [ $source ] )?
+          }
+        }
+      )*
+    ];
+
+    // $crate::define_suberrors! {
+    //   $tracer;
+    //   $derive $name;
+    //   [ $( $rest )* ]
+    // }
+  };
 }
 
 /// Internal macro used to define suberror structs
