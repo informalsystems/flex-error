@@ -9,11 +9,14 @@ pub mod test {
       #[derive(Debug, Clone)]
       #[derive(Eq, PartialEq)]
       FooError {
+        /// This is documentation for bar error
         Bar
           { code: u32 }
           [ DisplayError<ExternalError> ]
           | e | { format_args!("Bar error with code {}", e.code) },
 
+        /// This is documentation for baz error
+        #[derive(Ord, PartialOrd)]
         Baz
           { extra: String }
           | e | { format_args!("General Baz error with extra detail: {}", e.extra) },
