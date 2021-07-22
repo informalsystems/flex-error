@@ -187,8 +187,20 @@ macro_rules! define_error {
     { $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      $crate::DefaultTracer,
+      @tracer($crate::DefaultTracer),
       [ derive(Debug) ],
+      $name,
+      { $($suberrors)* }
+    ];
+  };
+  ( #[doc = $doc:literal] $( #[$attr:meta] )*
+    $name:ident
+    { $($suberrors:tt)* }
+  ) => {
+    $crate::define_error_with_tracer![
+      @tracer($crate::DefaultTracer),
+      @doc($doc),
+      [ $( $attr ),* ],
       $name,
       { $($suberrors)* }
     ];
@@ -198,7 +210,7 @@ macro_rules! define_error {
     { $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      $crate::DefaultTracer,
+      @tracer($crate::DefaultTracer),
       [ $( $attr ),* ],
       $name,
       { $($suberrors)* }
@@ -209,7 +221,7 @@ macro_rules! define_error {
     { $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      $tracer,
+      @tracer($tracer),
       [ derive(Debug) ],
       $name,
       { $($suberrors)* }
@@ -221,7 +233,7 @@ macro_rules! define_error {
     { $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      $tracer,
+      @tracer($tracer),
       [ $( $attr ),* ],
       $name,
       { $($suberrors)* }
@@ -236,13 +248,16 @@ macro_rules! define_error {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! define_error_with_tracer {
-  ( $tracer:ty,
+  ( @tracer($tracer:ty),
+    $( @doc($doc:literal), )?
     [ $( $attr:meta ),* ],
     $name:ident,
     { $($suberrors:tt)* }
   ) => {
     $crate::macros::paste![
-      $crate::define_main_error!($tracer, $name);
+      $crate::define_main_error!($tracer,
+        $( @doc($doc), )?
+        $name);
 
       $crate::define_error_detail!(
         [ $( $attr ),* ] ,
@@ -263,10 +278,13 @@ macro_rules! define_error_with_tracer {
 #[doc(hidden)]
 macro_rules! define_main_error {
   ( $tracer:ty,
+    $( @doc($doc:literal), )?
     $name:ident
   ) => {
     $crate::macros::paste![
-      pub struct $name (pub [< $name Detail >], pub $tracer);
+      $crate::define_main_error_struct!($tracer,
+        $( @doc($doc), )?
+        $name);
 
       impl $crate::ErrorSource<$tracer> for $name {
         type Source = Self;
@@ -347,6 +365,20 @@ macro_rules! define_main_error {
             }
         }
       }
+    ];
+  }
+}
+
+#[macro_export]
+#[doc(hidden)]
+macro_rules! define_main_error_struct {
+  ( $tracer:ty,
+    $( @doc($doc:literal), )?
+    $name:ident
+  ) => {
+    $crate::macros::paste![
+      $( #[doc = $doc] )?
+      pub struct $name (pub [< $name Detail >], pub $tracer);
     ];
   }
 }

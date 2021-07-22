@@ -6,6 +6,8 @@ pub mod test {
     pub struct ExternalError;
 
     define_error! {
+      /// This is documentation for foo error
+
       #[derive(Debug, Clone)]
       #[derive(Eq, PartialEq)]
       FooError {
