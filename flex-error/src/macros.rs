@@ -501,7 +501,7 @@ macro_rules! define_main_error {
           fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>)
             -> ::core::fmt::Result
           {
-              self.trace().fmt(f)
+              ::core::fmt::Display::fmt(self.trace(), f)
           }
       }
 
