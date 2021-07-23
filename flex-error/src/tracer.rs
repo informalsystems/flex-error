@@ -37,12 +37,6 @@ pub trait ErrorMessageTracer {
 /// to extract a source error type to be used as both error detail and
 /// error trace. We also should not expect `E` to implement `Clone`, as
 /// error types such as [`eyre::Report`] do not implement `Clone`.
-///
-/// Note that because of restrictions on generic trait implementations outside
-/// of a Rust crate, it is not possible to generically implement `ErrorTracer<E>`
-/// for a custom error tracer outside of `flex-error`. If you want to define custom
-/// error tracers, you may need to make a copy of your own definition of
-/// `ErrorTracer` and also [`StdError`] in your own crate.
 pub trait ErrorTracer<E>: ErrorMessageTracer {
     /// Create a new error trace from `E`, also taking ownership of it.
     ///

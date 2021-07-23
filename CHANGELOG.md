@@ -13,6 +13,8 @@ Breaking changes:
 - Change the error constructor convention from `error::constructor_error()` to
   `error::Error::constructor()`.
 
+- Allow multiple attributes to be given to main and sub errors in `define_error!`.
+
 ## v3.0.0
 
 Breaking changes:

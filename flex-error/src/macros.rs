@@ -7,7 +7,6 @@ pub use paste::paste;
 
   ```ignore
   define_error! {
-    #[derive()]
     ErrorName {
       SubErrorWithFieldsAndErrorSource
         { field1: Type1, field2: Type2, ... }
@@ -36,51 +35,138 @@ pub use paste::paste;
   }
   ```
 
-  Behind the scene, `define_error!` does the following:
+  ## Macro Expansion
 
-    - Define an enum with the postfix `Detail`, e.g. an error named
-      `FooError` would have the enum `FooErrorDetail` defined.
+  Behind the scene, for an error named `MyError`, `define_error!`
+  does the following:
 
-    - Define the error name as a type alias to
-      [`ErrorReport<ErrorNameDetail, DefaultTracer>`](crate::ErrorReport).
-      e.g. `type FooError = ErrorReport<FooErrorDetail, DefaultTracer>;`.
+    - Define a struct in the form
 
-    - For each suberror, does the following:
+      ```ignore
+      pub struct MyError(pub MyErrorDetail, pub flex_error::DefaultTracer)
+      ```
 
-        - Define a variant with the suberror name in the detail enum.
-          e.g. a `Bar` suberror in `FooError` becomes a `Bar`
-          variant in `FooErrorDetail`.
+    - Define an enum in the form
 
-        - Define a struct with the `Subdetail` postfix. e.g.
-          `Bar` would have a `BarSubdetail` struct.
+      ```ignore
+      pub enum MyError { ... }
+      ```
 
-          - The struct contains all named fields if specified.
+      For each suberror named `MySubError`, does the following:
 
-          - If an error source is specified, a `source` field is
-            also defined with the type
-            [`AsErrorDetail<ErrorSource>`](crate::AsErrorDetail).
-            e.g. a suberror with
-            [`DisplayError<SourceError>`](crate::DisplayError)
-            would have the field `source: SourceError`.
-            Because of this, the field name `source` is reserved and
-            should not be present in other detail fields.
+        - Define a variant in `MyError` in the form
+          ```ignore
+          pub enum MyError { ..., MySubError(MySubErrorSubdetail) ,... }
+          ```
 
-        - Implement [`Display`](std::fmt::Display) for the suberror
-          using the provided formatter to format the arguments.
-          The argument type of the formatter is the suberror subdetail struct.
+          - Implement [`core::fmt::Debug`] and [`core::fmt::Display`]
+            for `MyError`.
 
-        - Define a suberror constructor function in snake case with the postfix
-          `_error`. e.g. `Bar` would have the constructor function `bar_error`.
+          - Implement [`std::error::Error`] for `MyError` behind the `"std"`
+            feature flag. You will have to enable the `"std"` feature in
+            your own crate to use this implementation.
 
-          - The function accepts arguments according to the named fields specified.
+          - Implement [`ErrorSource<DefaultTracer>`](crate::ErrorSource)
+            for `MyError`, with `MyErrorDetail` being the `Detail` type,
+            and `MyError` being the `Source` type.
 
-          - If an error source is specified, the constructor function also accepts
-            a last argument of type [`AsErrorSource<ErrorSource>`](crate::AsErrorSource).
-            e.g. a suberror with [`DisplayError<SourceError>`](crate::DisplayError)
-            would have the last argument of type `SourceError` in the constructor function.
+          - Implement the following helper methods in `impl MyError {...}`:
 
-          - The function returns the main error type. e.g. `FooError`, which is alias to
-            [`ErrorReport<FooErrorDetail, DefaultTrace>`](crate::ErrorReport).
+            - `pub fn detail(&self) -> &MyErrorDetail`
+
+            - `pub fn trace(&self) -> flex_error::DefaultTracer`
+
+            - `pub fn add_trace<E: Display>(self, e: &E) -> MyError`
+
+        - Define a struct in the form
+
+          ```ignore
+          pub struct MySubErrorSubdetail { ... }
+          ```
+
+          - For each field named `my_field: MyFieldType`, define a struct
+            field in the form
+
+            ```ignore
+            struct MySubErrorSubdetail { ..., pub my_field: MyFieldType, ... }
+            ```
+
+          - If the sub-error has an error source `MySource` implementing
+            [`ErrorSource<DefaultTracer>`](crate::ErrorSource), define a `source` field
+            in the form
+
+            ```ignore
+            struct MySubErrorSubdetail { ..., pub source: MySource::Detail }
+            ```
+
+          - Implement [`core::fmt::Display`] in the form
+
+            ```ignore
+            impl Display for MySubErrorSubdetail { ... }
+            ```
+
+        - Define a snake-cased error constructor method in `MyError` in the form
+
+          ```ignore
+          impl MyError { pub fn my_sub_error(...) -> MyError { ... } }
+          ```
+
+          - For each field named `my_field: MyFieldType`, define a
+            function argument in the form
+
+            ```ignore
+            fn my_sub_error(..., my_field: MyFieldType, ...)
+            ```
+
+          - If the sub-error has an error source `MySource` implementing
+            [`ErrorSource`](crate::ErrorSource), define a `source` field in the form
+
+            ```ignore
+            fn my_sub_error(..., source: MySource::Detail)
+            ```
+
+  ## Formatter
+
+  For each sub-error definition, a formatter needs to be provided using the
+  closure syntax. For example, the following definition:
+
+
+  ```ignore
+  MyError {
+    MySubError
+      { code: u32 }
+      [ MySource ]
+      | e | { format_args!("error with code {}", e.code) },
+    ...
+  }
+  ```
+
+  will include the following expansion:
+
+  ```
+  impl ::core::fmt::Display for MySubErrorSubdetail {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+      let e = self;
+      write!(f, "{}", format_args!("error with code {}", e.code))
+    }
+  }
+  ```
+
+  Note that there is no need to manually display the error source, as the
+  source is already automatically traced by the error tracer.
+
+  If a sub-error do not have any field, we can write a simpler form of the
+  formatter like:
+
+  ```ignore
+  MyError {
+    MySubError
+      | _ | { "something went wrong" },
+    ...
+  }
+  ```
+
+  ## Example Definition
 
   We can demonstrate the macro expansion of `define_error!` with the following example:
 
@@ -104,7 +190,7 @@ pub use paste::paste;
   The above code will be expanded into something like follows:
 
   ```ignore
-  pub type FooError = Report<FooErrorDetail, DefaultTracer>;
+  pub struct FooError(pub FooErrorDetail, pub flex_error::DefaultTracer);
 
   #[derive(Debug)]
   pub enum FooErrorDetail {
@@ -126,15 +212,15 @@ pub use paste::paste;
   fn bar_error(code: u32, source: ExternalError) -> FooError { ... }
   fn baz_error(extra: String) -> FooError { ... }
 
-  impl Display for BarSubdetail {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+  impl ::core::fmt::Display for BarSubdetail {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
       let e = self;
       write!(f, "{}", format_args!("Bar error with code {}", e.code))
     }
   }
 
-  impl Display for BazSubdetail {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+  impl ::core::fmt::Display for BazSubdetail {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
       let e = self;
       write!(f, "{}", format_args!("General Baz error with extra detail: {}", e.code))
     }
@@ -147,9 +233,8 @@ pub use paste::paste;
   to expand the Rust module that uses `define_error!` to see how the error definition
   gets expanded.
 
-  Because `FooError` is defined as an alias to [`ErrorReport`](crate::ErrorReport),
-  it automatically implements [`ErrorSource`](crate::ErrorSource) and can be used
-  as a source in other error definitions. For example:
+  Since `FooError` implements [`ErrorSource`](crate::ErrorSource), it can be used
+  directly as a error source in other error definitions. For example:
 
   ```ignore
   define_error! {
@@ -179,6 +264,107 @@ pub use paste::paste;
   tracer already takes care of the source error trace, so the full trace is
   automatically tracked inside `foo_error`. The outer error only need to
   add additional detail about what caused the source error to be raised.
+
+  ## Attributes
+
+  `define_error!` supports adding attributes to the generated error types.
+
+  ### First `doc` Attribute
+
+  If the first attribute is a [`doc`](https://doc.rust-lang.org/rustdoc/the-doc-attribute.html)
+  attribute, it is attached to the main error struct. For example:
+
+  ```ignore
+  define_error! {
+    /// Documentation for MyError
+    MyError { ... }
+  }
+  ```
+
+  will include the following expansion:
+
+  ```ignore
+  #[doc = "Documentation for MyError"]
+  pub struct MyError(pub MyErrorDetail, pub flex_error::DefaultTracer);
+  ```
+
+  ## Common Attributes
+
+  For all other attributes defined on the main error type,
+  they are defined on the _error detail_ and _sub-errors type. For example:
+
+
+  ```ignore
+  define_error! {
+    #[derive(Debug, Clone)]
+    MyError {
+      Foo
+        { ... }
+        | _ | { "foo error" },
+
+      Bar
+        { ... }
+        | _ | { "bar error" },
+    }
+  }
+  ```
+
+  will include the following expansion:
+
+  ```ignore
+  pub struct MyError(pub MyErrorDetail, pub flex_error::DefaultTracer);
+
+  #[derive(Debug, Clone)]
+  pub enum MyErrorDetail { ... }
+
+  #[derive(Debug, Clone)]
+  pub struct FooSubdetail { ... }
+
+  #[derive(Debug, Clone)]
+  pub struct BarSubdetail { ... }
+  ```
+
+  Note that we do not add the `derive` attribute to the main error struct
+  `MyError`. This is because the [`DefaultTracer`](crate::DefaultTracer)
+  type is opaque, and auto deriving traits like `Clone` on it is
+  generally not supported.
+
+  If you need the main error type to implement certain traits,
+  you can instead define your own custom `impl` definition for it.
+
+  ## Sub Attributes
+
+  We can also define custom attributes for only the sub-error.
+  In that case, the attribute is given to the sub-detail type.
+  For example:
+
+  ```ignore
+  define_error! {
+    MyError {
+      /// Documentation for Foo
+      #[derive(Clone)]
+      Foo
+        { ... }
+        | _ | { "foo error" },
+
+      ...
+    }
+  }
+  ```
+
+  will include the following expansion:
+
+  ```ignore
+  #[doc = "Documentation for Foo"]
+  #[derive(Clone)]
+  pub struct FooSubdetail { ... }
+  ```
+
+  Note that if no attribute is given to the main error,
+  the `#[derive(Debug)]` trait is added by default.
+  So there is no need to derive it again in the
+  sub-errors.
+
 **/
 
 #[macro_export]
@@ -323,7 +509,7 @@ macro_rules! define_main_error {
       impl ::std::error::Error for $name
       where
           [< $name Detail >]: ::core::fmt::Display,
-          $tracer: ::core::fmt::Debug + core::fmt::Display,
+          $tracer: ::core::fmt::Debug + ::core::fmt::Display,
           $tracer: $crate::ErrorMessageTracer,
       {
           fn source(&self) -> ::core::option::Option<&(dyn ::std::error::Error + 'static)> {
@@ -463,14 +649,14 @@ macro_rules! define_error_detail_display {
     @suberrors{ $( $suberror:ident ),* } $(,)?
   ) => {
     $crate::macros::paste! [
-      impl core::fmt::Display for [< $name Detail >] {
-        fn fmt(&self, f: &mut core::fmt::Formatter<'_>)
+      impl ::core::fmt::Display for [< $name Detail >] {
+        fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>)
           -> ::core::fmt::Result
         {
           match self {
             $(
               Self::$suberror( suberror ) => {
-                write!( f, "{}",  suberror )
+                ::core::write!( f, "{}",  suberror )
               }
             ),*
           }
@@ -512,10 +698,11 @@ macro_rules! define_suberrors {
         $( @source[ $source ] )?
       }
 
-      impl core::fmt::Display for [< $suberror Subdetail >] {
-        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+      impl ::core::fmt::Display for [< $suberror Subdetail >] {
+        fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+          use ::core::format_args;
           let $formatter_arg = self;
-          write!(f, "{}",  $formatter)
+          ::core::write!(f, "{}",  $formatter)
         }
       }
 

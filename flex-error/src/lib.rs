@@ -13,18 +13,13 @@ The library separates out several concepts as traits:
 
   - `ErrorSource` allows generic conversion of external error types into an ErrorDetail with optional ErrorTrace.
 
-  - An application error is of type
-    [`ErrorReport<ErrorDetail, ErrorTracer>`](crate::ErrorReport),
-    which holds both the error details and trace.
-
 With the separation of concerns, `flex-error` allows applications to easily
 switch between different error reporting implementations,
 such as [`eyre`] and [`anyhow`], by implementing
 [`ErrorTracer`] for the respective reporters.
 
 `flex-error` defines a [`define_error!`] macro that define custom `Detail`
-types and error types as alias to
-[`ErrorReport<Detail, DefaultTracer>`](crate::ErrorReport).
+types and error types implementing `ErrorSource<DefaultTracer>`.
 The [`DefaultTracer`] type is set globally by the feature flag, so that
 application error types do not have to be over-generalized.
 The trade off is that it is not possible to use multiple

@@ -3,23 +3,28 @@ use core::marker::PhantomData;
 
 use crate::tracer::{ErrorMessageTracer, ErrorTracer};
 
-/// A type implementing `ErrorSource<Trace>` is a proxy type that provides the
-/// capability of extracting from an error source of type `Self::Source`,
-/// returning error detail of type `Self::Detail`, and an optional error
-/// tracer of type `Tracer`.
-///
-/// The proxy type `Self` is not used anywhere. We separate out `Self`
-/// and `Self::Source` so that there can be different generic implementations
-/// of error sources, such as for all `E: Display` or for all `E: Error`.
-///
-/// There are currently 4 types of error sources:
-///   - [`NoSource`] - Indicating the lack of any error source
-///   - [`DisplayError`] - An error source that implements [`Display`](std::fmt::Display).
-///   - [`DisplayOnly`] - An error source that implements [`Display`](std::fmt::Display) and do not provide additional detail.
-///   - [`DetailOnly`] - An error source that do not contain any error trace
-///   - [`TraceError`] - An error source that implements [`Error`](std::error::Error) with no detail.
-///   - [`ErrorReport`](crate::report::ErrorReport) - An error type defined by `flex-error` that contains
-///     both error details and error traces.
+/**
+ A type implementing `ErrorSource<Trace>` is a proxy type that provides the
+ capability of extracting from an error source of type `Self::Source`,
+ returning error detail of type `Self::Detail`, and an optional error
+ tracer of type `Tracer`.
+
+ The proxy type `Self` is not used anywhere. We separate out `Self`
+ and `Self::Source` so that there can be different generic implementations
+ of error sources, such as for all `E: Display` or for all `E: Error`.
+
+ There are currently 4 types of error sources:
+   - [`NoSource`] - Indicating the lack of any error source
+   - [`DisplayError`] - An error source that implements [`Display`](std::fmt::Display)
+     to be used for tracing, and also be stored as detail.
+   - [`DisplayOnly`] - An error source that implements [`Display`](std::fmt::Display)
+     to be used for tracing, and discarded instead of being stored as detail.
+   - [`DetailOnly`] - An error source that is used as detail and do not contain any error trace.
+   - [`TraceError`] - An error source that implements [`Error`](std::error::Error)
+     and used only for tracing.
+   - [`TraceClone`] - An error source that implements [`Error`](std::error::Error) and
+     have a cloned copy as detail.
+**/
 
 pub trait ErrorSource<Trace> {
     /// The type of the error source.
@@ -69,12 +74,6 @@ pub struct TraceClone<E>(PhantomData<E>);
 /// An [`ErrorSource`] that contains only the error trace with no detail.
 /// This can for example be used for upstream functions that return tracers like
 /// [`eyre::Report`] directly.
-///
-/// Note that the `Tracer` type must be the same as the tracer type defined in
-/// [`ErrorReport`](crate::ErrorReport), and most likely it should also be the same as
-/// [`DefaultTracer`](crate::DefaultTracer).
-/// If you plan to use `flex-error` with different feature flags, you should
-/// classify the source as [`TraceError`] instead.
 pub struct TraceOnly<Tracer>(PhantomData<Tracer>);
 
 /// An [`ErrorSource`] that only provides error details but do not provide any trace.
