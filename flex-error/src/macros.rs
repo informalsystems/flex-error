@@ -187,10 +187,10 @@ macro_rules! define_error {
     { $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      @tracer($crate::DefaultTracer),
+      @tracer( $crate::DefaultTracer ),
       @attr[ derive(Debug) ],
-      @name($name),
-      { $($suberrors)* }
+      @name( $name ),
+      @suberrors{ $($suberrors)* }
     ];
   };
   ( #[doc = $doc:literal] $( #[$attr:meta] )*
@@ -198,11 +198,11 @@ macro_rules! define_error {
     { $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      @tracer($crate::DefaultTracer),
-      @doc($doc),
+      @tracer( $crate::DefaultTracer ),
+      @doc( $doc ),
       @attr[ $( $attr ),* ],
-      @name($name),
-      { $($suberrors)* }
+      @name( $name ),
+      @suberrors{ $($suberrors)* }
     ];
   };
   ( $( #[$attr:meta] )*
@@ -210,10 +210,10 @@ macro_rules! define_error {
     { $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      @tracer($crate::DefaultTracer),
+      @tracer( $crate::DefaultTracer ),
       @attr[ $( $attr ),* ],
-      @name($name),
-      { $($suberrors)* }
+      @name( $name ),
+      @suberrors{ $($suberrors)* }
     ];
   };
   ( @with_tracer[ $tracer:ty ]
@@ -221,22 +221,22 @@ macro_rules! define_error {
     { $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      @tracer($tracer),
+      @tracer( $tracer ),
       @attr[ derive(Debug) ],
-      @name($name),
-      { $($suberrors)* }
+      @name( $name ),
+      @suberrors{ $($suberrors)* }
     ];
   };
   ( @with_tracer[ $tracer:ty ]
     $( #[$attr:meta] )*
     $name:ident,
-    { $($suberrors:tt)* }
+    @suberrors{ $($suberrors:tt)* }
   ) => {
     $crate::define_error_with_tracer![
-      @tracer($tracer),
+      @tracer( $tracer ),
       @attr[ $( $attr ),* ],
-      @name($name),
-      { $($suberrors)* }
+      @name( $name ),
+      @suberrors{ $($suberrors)* }
     ];
   };
 }
@@ -248,16 +248,18 @@ macro_rules! define_error {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! define_error_with_tracer {
-  ( @tracer($tracer:ty),
+  ( @tracer( $tracer:ty ),
     $( @doc($doc:literal), )?
     @attr[ $( $attr:meta ),* ],
     @name($name:ident),
-    { $($suberrors:tt)* }
+    @suberrors{ $($suberrors:tt)* } $(,)?
   ) => {
     $crate::macros::paste![
-      $crate::define_main_error!($tracer,
-        $( @doc($doc), )?
-        $name);
+      $crate::define_main_error!(
+        @tracer( $tracer ),
+        $( @doc( $doc ), )?
+        @name( $name )
+      );
 
       $crate::define_error_detail!(
         @attr[ $( $attr ),* ] ,
@@ -277,14 +279,16 @@ macro_rules! define_error_with_tracer {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! define_main_error {
-  ( $tracer:ty,
-    $( @doc($doc:literal), )?
-    $name:ident
+  ( @tracer( $tracer:ty ),
+    $( @doc( $doc:literal ), )?
+    @name( $name:ident ) $(,)?
   ) => {
     $crate::macros::paste![
-      $crate::define_main_error_struct!($tracer,
+      $crate::define_main_error_struct!(
+        @tracer( $tracer ),
         $( @doc($doc), )?
-        $name);
+        @name( $name )
+      );
 
       impl $crate::ErrorSource<$tracer> for $name {
         type Source = Self;
@@ -371,29 +375,10 @@ macro_rules! define_main_error {
 
 #[macro_export]
 #[doc(hidden)]
-macro_rules! with_suberrors {
-  ( @cont($cont:path),
-    @args[ $($args:tt)* ],
-    @suberrors{
-      $(
-        $( #[$sub_attr:meta] )*
-        $suberror:ident
-        $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
-        $( [ $source:ty ] )?
-        | $formatter_arg:pat | $formatter:expr
-      ),* $(,)?
-    }
-  ) => {
-    $cont!( @args[ $( $args )* ], @suberrors{ $( $suberror ),* } );
-  }
-}
-
-#[macro_export]
-#[doc(hidden)]
 macro_rules! define_main_error_struct {
-  ( $tracer:ty,
-    $( @doc($doc:literal), )?
-    $name:ident
+  ( @tracer( $tracer:ty ),
+    $( @doc( $doc:literal ), )?
+    @name( $name:ident ) $(,)?
   ) => {
     $crate::macros::paste![
       $( #[doc = $doc] )?
@@ -404,14 +389,33 @@ macro_rules! define_main_error_struct {
 
 #[macro_export]
 #[doc(hidden)]
+macro_rules! with_suberrors {
+  ( @cont($cont:path),
+    @ctx[ $($args:tt)* ],
+    @suberrors{
+      $(
+        $( #[$sub_attr:meta] )*
+        $suberror:ident
+        $( { $( $arg_name:ident : $arg_type:ty ),* $(,)? } )?
+        $( [ $source:ty ] )?
+        | $formatter_arg:pat | $formatter:expr
+      ),* $(,)?
+    } $(,)?
+  ) => {
+    $cont!( @ctx[ $( $args )* ], @suberrors{ $( $suberror ),* } );
+  }
+}
+
+#[macro_export]
+#[doc(hidden)]
 macro_rules! define_error_detail {
   ( @attr[ $( $attr:meta ),* ],
     @name( $name:ident ),
-    @suberrors{ $($suberrors:tt)* }
+    @suberrors{ $($suberrors:tt)* } $(,)?
   ) => {
     $crate::with_suberrors!(
       @cont($crate::define_error_detail_enum),
-      @args[
+      @ctx[
         @attr[ $( $attr ),* ],
         @name($name)
       ],
@@ -420,7 +424,7 @@ macro_rules! define_error_detail {
 
     $crate::with_suberrors!(
       @cont($crate::define_error_detail_display),
-      @args[
+      @ctx[
         @name($name)
       ],
       @suberrors{ $( $suberrors )* }
@@ -431,11 +435,11 @@ macro_rules! define_error_detail {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! define_error_detail_enum {
-  ( @args[
+  ( @ctx[
       @attr[ $( $attr:meta ),* ],
       @name($name:ident)
     ],
-    @suberrors{ $( $suberror:ident ),* }
+    @suberrors{ $( $suberror:ident ),* } $(,)?
   ) => {
     $crate::macros::paste! [
       $( #[$attr] )*
@@ -453,14 +457,16 @@ macro_rules! define_error_detail_enum {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! define_error_detail_display {
-  ( @args[
+  ( @ctx[
       @name( $name:ident )
     ],
-    @suberrors{ $( $suberror:ident ),* }
+    @suberrors{ $( $suberror:ident ),* } $(,)?
   ) => {
     $crate::macros::paste! [
       impl core::fmt::Display for [< $name Detail >] {
-        fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        fn fmt(&self, f: &mut core::fmt::Formatter<'_>)
+          -> ::core::fmt::Result
+        {
           match self {
             $(
               Self::$suberror( suberror ) => {
@@ -480,7 +486,7 @@ macro_rules! define_suberrors {
   ( @tracer($tracer:ty),
     @attr[ $( $attr:meta ),* ],
     @name($name:ident),
-    {}
+    {} $(,)?
   ) => { };
   ( @tracer($tracer:ty),
     @attr[ $( $attr:meta ),* ],
@@ -497,13 +503,13 @@ macro_rules! define_suberrors {
   ) => {
     $crate::macros::paste![
       $crate::define_suberror! {
-        $tracer,
-        [ $( $attr ),* ],
-        [ $( $sub_attr ),* ],
-        $name,
-        $suberror,
-        ( $( $( $arg_name : $arg_type ),* )? )
-        $( [ $source ] )?
+        @tracer( $tracer ),
+        @attr[ $( $attr ),* ],
+        @sub_attr[ $( $sub_attr ),* ],
+        @name( $name ),
+        @suberror( $suberror ),
+        @args( $( $( $arg_name : $arg_type ),* )? )
+        $( @source[ $source ] )?
       }
 
       impl core::fmt::Display for [< $suberror Subdetail >] {
@@ -515,11 +521,11 @@ macro_rules! define_suberrors {
 
       impl $name {
         $crate::define_error_constructor! {
-          $tracer;
-          $name;
-          $suberror;
-          ( $( $( $arg_name : $arg_type ),* )? )
-          $( [ $source ] )?
+          @tracer( $tracer ),
+          @name( $name ),
+          @suberror( $suberror ),
+          @args( $( $( $arg_name : $arg_type ),* )? )
+          $( @source[ $source ] )?
         }
       }
     ];
@@ -537,13 +543,13 @@ macro_rules! define_suberrors {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! define_suberror {
-  ( $tracer:ty,
-    [ $( $attr:meta ),* ],
-    [ $( $sub_attr:meta ),* ],
-    $name:ident,
-    $suberror:ident,
-    ( $( $arg_name:ident: $arg_type:ty ),* )
-    [ Self ]
+  ( @tracer( $tracer:ty ),
+    @attr[ $( $attr:meta ),* ],
+    @sub_attr[ $( $sub_attr:meta ),* ],
+    @name( $name:ident ),
+    @suberror( $suberror:ident ),
+    @args( $( $arg_name:ident: $arg_type:ty ),* )
+    @source[ Self ]
   ) => {
     $crate::macros::paste! [
       $( #[ $attr ] )*
@@ -554,13 +560,13 @@ macro_rules! define_suberror {
       }
     ];
   };
-  ( $tracer:ty,
-    [ $( $attr:meta ),* ],
-    [ $( $sub_attr:meta ),* ],
-    $name:ident,
-    $suberror:ident,
-    ( $( $arg_name:ident: $arg_type:ty ),* )
-    $( [ $source:ty ] )?
+  ( @tracer( $tracer:ty ),
+    @attr[ $( $attr:meta ),* ],
+    @sub_attr[ $( $sub_attr:meta ),* ],
+    @name( $name:ident ),
+    @suberror( $suberror:ident ),
+    @args( $( $arg_name:ident: $arg_type:ty ),* )
+    $( @source[ $source:ty ] )?
   ) => {
     $crate::macros::paste! [
       $( #[ $attr ] )*
@@ -577,10 +583,10 @@ macro_rules! define_suberror {
 #[macro_export]
 #[doc(hidden)]
 macro_rules! define_error_constructor {
-  ( $tracer:ty;
-    $name:ident;
-    $suberror:ident;
-    ( $( $arg_name:ident: $arg_type:ty ),* )
+  ( @tracer( $tracer:ty ),
+    @name( $name:ident ),
+    @suberror( $suberror:ident ),
+    @args( $( $arg_name:ident: $arg_type:ty ),* ) $(,)?
   ) => {
     $crate::macros::paste! [
       pub fn [< $suberror:snake >](
@@ -596,11 +602,11 @@ macro_rules! define_error_constructor {
       }
     ];
   };
-  ( $tracer:ty;
-    $name:ident;
-    $suberror:ident;
-    ( $( $arg_name:ident: $arg_type:ty ),* )
-    [ Self ]
+  ( @tracer( $tracer:ty ),
+    @name( $name:ident ),
+    @suberror( $suberror:ident ),
+    @args( $( $arg_name:ident: $arg_type:ty ),* )
+    @source[ Self ]
   ) => {
     $crate::macros::paste! [
       pub fn [< $suberror:snake >](
@@ -619,11 +625,11 @@ macro_rules! define_error_constructor {
       }
     ];
   };
-  ( $tracer:ty;
-    $name:ident;
-    $suberror:ident;
-    ( $( $arg_name:ident: $arg_type:ty ),* )
-    [ $source:ty ]
+  ( @tracer( $tracer:ty ),
+    @name( $name:ident ),
+    @suberror( $suberror:ident ),
+    @args( $( $arg_name:ident: $arg_type:ty ),* )
+    @source[ $source:ty ]
   ) => {
     $crate::macros::paste! [
       pub fn [< $suberror:snake >](
