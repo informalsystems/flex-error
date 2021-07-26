@@ -1,6 +1,14 @@
 # Changelog
 
-## v4.0.0
+## v0.4.1
+
+Breaking changes:
+
+- The `impl` definition for `std::error::Error` is now generated based on whether
+  the `std` feature is enabled on the `flex-error` crate, instead of the user
+  crate that calls `define_error`.
+
+## v0.4.0
 
 Breaking changes:
 
@@ -15,7 +23,7 @@ Breaking changes:
 
 - Allow multiple attributes to be given to main and sub errors in `define_error!`.
 
-## v3.0.0
+## v0.3.0
 
 Breaking changes:
 
@@ -26,7 +34,7 @@ Breaking changes:
 
 - Allow recursive error source using `Self`.
 
-## v2.0.0
+## v0.2.0
 
 Breaking changes:
 
@@ -34,6 +42,6 @@ Breaking changes:
 
 - Allow custom derive attributes in the form of `define_error!{ #[derive(Debug, ...)] Error { ... } }`.
 
-## v1.0.0
+## v0.1.0
 
 - Initial draft release for flex-error.
