@@ -22,6 +22,7 @@ impl ErrorMessageTracer for AnyhowTracer {
     }
 }
 
+#[cfg(feature = "std")]
 impl<E> ErrorTracer<E> for AnyhowTracer
 where
     E: std::error::Error + Send + Sync + 'static,

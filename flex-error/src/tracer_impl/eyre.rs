@@ -22,6 +22,7 @@ impl ErrorMessageTracer for EyreTracer {
     }
 }
 
+#[cfg(feature = "std")]
 impl<E> ErrorTracer<E> for EyreTracer
 where
     E: std::error::Error + Send + Sync + 'static,

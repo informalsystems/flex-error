@@ -505,17 +505,10 @@ macro_rules! define_main_error {
           }
       }
 
-      #[cfg(feature = "std")]
-      impl ::std::error::Error for $name
-      where
-          [< $name Detail >]: ::core::fmt::Display,
-          $tracer: ::core::fmt::Debug + ::core::fmt::Display,
-          $tracer: $crate::ErrorMessageTracer,
-      {
-          fn source(&self) -> ::core::option::Option<&(dyn ::std::error::Error + 'static)> {
-              $crate::ErrorMessageTracer::as_error(self.trace())
-          }
-      }
+      $crate::define_std_err_impl!(
+        @tracer( $tracer ),
+        @name( $name )
+      );
 
       impl $name {
         pub fn detail(&self) -> &[< $name Detail >] {
@@ -557,6 +550,39 @@ macro_rules! define_main_error {
       }
     ];
   }
+}
+
+// define the impl for `std::error::Error` only in std mode
+#[cfg(feature = "std")]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! define_std_err_impl {
+  ( @tracer( $tracer:ty ),
+    @name( $name:ident ) $(,)?
+  ) => {
+    $crate::macros::paste![
+      impl ::std::error::Error for $name
+      where
+          [< $name Detail >]: ::core::fmt::Display,
+          $tracer: ::core::fmt::Debug + ::core::fmt::Display,
+          $tracer: $crate::ErrorMessageTracer,
+      {
+          fn source(&self) -> ::core::option::Option<&(dyn ::std::error::Error + 'static)> {
+              $crate::ErrorMessageTracer::as_error(self.trace())
+          }
+      }
+    ];
+  }
+}
+
+// do not define the impl for `std::error::Error` when in no_std mode
+#[cfg(not(feature = "std"))]
+#[macro_export]
+#[doc(hidden)]
+macro_rules! define_std_err_impl {
+    ( @tracer( $tracer:ty ),
+    @name( $name:ident ) $(,)?
+  ) => {};
 }
 
 #[macro_export]
