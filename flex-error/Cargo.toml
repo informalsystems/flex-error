@@ -10,7 +10,6 @@ readme = "../README.md"
 
 [dependencies]
 paste = "1.0.5"
-serde = { version = "1.0.126", optional = true }
 eyre = { version = "0.6.5", optional = true }
 anyhow = { version = "1.0.40", optional = true }
 
@@ -19,4 +18,4 @@ default = ["full"]
 std = []
 eyre_tracer = ["eyre", "std"]
 anyhow_tracer = ["anyhow", "std"]
-full = ["std", "eyre_tracer", "anyhow_tracer", "serde"]
+full = ["std", "eyre_tracer", "anyhow_tracer"]
