@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.2
+
+- Make the `Display` implementation of error types use `Debug` to display error traces
+  from `eyre` and other error tracers.
+
 ## v0.4.1
 
 Breaking changes:

@@ -62,9 +62,8 @@ pub use paste::paste;
           - Implement [`core::fmt::Debug`] and [`core::fmt::Display`]
             for `MyError`.
 
-          - Implement [`std::error::Error`] for `MyError` behind the `"std"`
-            feature flag. You will have to enable the `"std"` feature in
-            your own crate to use this implementation.
+          - If the `"std"` feature is enabled on the `flex-error` crate,
+            it will generate an `impl` block for [`std::error::Error`].
 
           - Implement [`ErrorSource<DefaultTracer>`](crate::ErrorSource)
             for `MyError`, with `MyErrorDetail` being the `Detail` type,
@@ -496,12 +495,14 @@ macro_rules! define_main_error {
 
       impl ::core::fmt::Display for $name
       where
-          $tracer: ::core::fmt::Display,
+          $tracer: ::core::fmt::Debug,
       {
           fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>)
             -> ::core::fmt::Result
           {
-              ::core::fmt::Display::fmt(self.trace(), f)
+              // Always use `Debug` to format error traces, as eyre do not
+              // include full back trace information in normal Display mode.
+              ::core::fmt::Debug::fmt(self.trace(), f)
           }
       }
 
