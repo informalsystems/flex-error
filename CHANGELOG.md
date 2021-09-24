@@ -2,6 +2,7 @@
 
 ## v0.4.3
 
+- Add `into_detail` and `into_trace` methods to error types defined by `define_error!`.
 - Export local alias to `std::error::Error` so that `std` do not need to be available in
   user crate when `define_error!` is called.
 

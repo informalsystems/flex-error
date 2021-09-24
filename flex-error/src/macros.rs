@@ -516,8 +516,17 @@ macro_rules! define_main_error {
             &self.0
         }
 
+
+        pub fn into_detail(self) -> [< $name Detail >] {
+            self.0
+        }
+
         pub fn trace(&self) -> &$tracer {
             &self.1
+        }
+
+        pub fn into_trace(self) -> $tracer {
+            self.1
         }
 
         pub fn add_trace<E: ::core::fmt::Display>(self, message: &E) -> Self
