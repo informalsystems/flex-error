@@ -33,6 +33,9 @@ extern crate std;
 
 pub extern crate alloc;
 
+#[cfg(feature = "std")]
+pub use std::error::Error as StdError;
+
 pub mod macros;
 mod source;
 mod tracer;

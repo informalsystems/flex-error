@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.4.3
+
+- Export local alias to `std::error::Error` so that `std` do not need to be available in
+  user crate when `define_error!` is called.
+
 ## v0.4.2
 
 - Make the `Display` implementation of error types use `Debug` to display error traces

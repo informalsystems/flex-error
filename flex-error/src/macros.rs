@@ -562,13 +562,13 @@ macro_rules! define_std_err_impl {
     @name( $name:ident ) $(,)?
   ) => {
     $crate::macros::paste![
-      impl ::std::error::Error for $name
+      impl $crate::StdError for $name
       where
           [< $name Detail >]: ::core::fmt::Display,
           $tracer: ::core::fmt::Debug + ::core::fmt::Display,
           $tracer: $crate::ErrorMessageTracer,
       {
-          fn source(&self) -> ::core::option::Option<&(dyn ::std::error::Error + 'static)> {
+          fn source(&self) -> ::core::option::Option<&(dyn $crate::StdError + 'static)> {
               $crate::ErrorMessageTracer::as_error(self.trace())
           }
       }
