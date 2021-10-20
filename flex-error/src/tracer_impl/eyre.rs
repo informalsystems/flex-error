@@ -1,5 +1,5 @@
 use crate::tracer::{ErrorMessageTracer, ErrorTracer};
-use core::fmt::Display;
+use core::fmt::{Debug, Display};
 
 /// Type alias to [`eyre::Report`].
 pub type EyreTracer = eyre::Report;
@@ -22,13 +22,12 @@ impl ErrorMessageTracer for EyreTracer {
     }
 }
 
-#[cfg(feature = "std")]
 impl<E> ErrorTracer<E> for EyreTracer
 where
-    E: std::error::Error + Send + Sync + 'static,
+    E: Display + Debug + Send + Sync + 'static,
 {
     fn new_trace(err: E) -> Self {
-        EyreTracer::new(err)
+        EyreTracer::msg(err)
     }
 
     fn add_trace(self, err: E) -> Self {

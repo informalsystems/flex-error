@@ -1,6 +1,6 @@
 [package]
 name = "flex-error"
-version = "0.4.3"
+version = "0.4.4"
 edition = "2018"
 license    = "Apache-2.0"
 repository = "https://github.com/informalsystems/flex-error"

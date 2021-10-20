@@ -1,5 +1,5 @@
 use crate::tracer::{ErrorMessageTracer, ErrorTracer};
-use core::fmt::Display;
+use core::fmt::{Debug, Display};
 
 /// Type alias to [`anyhow::Error`]
 pub type AnyhowTracer = anyhow::Error;
@@ -22,13 +22,12 @@ impl ErrorMessageTracer for AnyhowTracer {
     }
 }
 
-#[cfg(feature = "std")]
 impl<E> ErrorTracer<E> for AnyhowTracer
 where
-    E: std::error::Error + Send + Sync + 'static,
+    E: Display + Debug + Send + Sync + 'static,
 {
     fn new_trace(err: E) -> Self {
-        AnyhowTracer::new(err)
+        AnyhowTracer::msg(err)
     }
 
     fn add_trace(self, err: E) -> Self {

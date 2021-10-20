@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.4.4
+
+- Use `E: Display + Debug + Send + Sync + 'static` trait bound for `ErrorTracer<E>`
+  for eyre and anyhow tracers. The original `E: std::error::Error + Send + Sync + 'static`
+  trait bound do not work well when individual crates have `std` features disabled,
+  but had `flex-error`'s `std` feature enabled somehow.
+
 ## v0.4.3
 
 - Add `into_detail` and `into_trace` methods to error types defined by `define_error!`.
